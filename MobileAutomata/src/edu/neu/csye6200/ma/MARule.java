@@ -7,44 +7,56 @@ package edu.neu.csye6200.ma;
  * @author RaviKumar
  *
  */
-public class MARule extends MACell {
 
-	private String ruleName;
+enum RuleNames {
+	DEADALIVERULE, BRIANSBRAIN;
+}
 
-	public MARule(String ruleName) {
+public class MARule extends MACell implements IMARule {
+
+	private RuleNames ruleName;
+
+	public MARule(RuleNames ruleName) {
 		super();
 		this.ruleName = ruleName;
 	}
 
 	@Override
 	public MACellState getNextCellState() {
-		if (getRuleName().equalsIgnoreCase("DeadAliveRule")) {
-			if (getNeighborsCount(MACellState.ALIVE) >= 2) {
-				// If the cell has at least 2 neighboring cells
-				// that is alive, this cell should become alive.
-				return MACellState.ALIVE;
-			} else {
-				// Otherwise, the cell maintains its previous state.
-				return getCellState();
-			}
-		}
-		else {
+
+		if (ruleName.equals(RuleNames.DEADALIVERULE)) {
+			return getDeadAliveState();
+
+		} else if (ruleName.equals(RuleNames.BRIANSBRAIN)) {
+			return getBriansBrainState();
+
+		} else {
 			return getCellState();
 		}
+
 	}
 
-	/**
-	 * @return the ruleName
+	/*
+	 * RuleName --> DeadAlive Rule Description --> If the cell has at least 2
+	 * neighboring cells that are alive, cell should become alive.
 	 */
-	public String getRuleName() {
-		return ruleName;
+	private MACellState getDeadAliveState() {
+		if (getNeighborsCount(MACellState.ALIVE) >= 2)
+			return MACellState.ALIVE;
+		else
+			return getCellState();
 	}
 
-	/**
-	 * @param ruleName the ruleName to set
-	 */
-	public void setRuleName(String ruleName) {
-		this.ruleName = ruleName;
-	}
+	private MACellState getBriansBrainState() {
+		if (getCellState().equals(MACellState.DEAD) && getNeighborsCount(MACellState.ALIVE) == 2)
+			return MACellState.ALIVE;
+		else if (getCellState().equals(MACellState.ALIVE)) {
+			return MACellState.DYING;
+		} else if (getCellState().equals(MACellState.DYING)) {
+			return MACellState.DEAD;
+		} else {
+			return getCellState();
+		}
 
+	}
 }

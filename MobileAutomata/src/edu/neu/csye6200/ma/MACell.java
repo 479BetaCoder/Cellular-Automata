@@ -26,7 +26,7 @@ public class MACell {
 		this.cellXPos = xPos;
 		this.cellYPos = yPos;
 		this.frame = frame;
-		if(check == 0|| check == 1)
+		if(check == 0|| check == 1 || check == 2)
 		cellState = MACellState.ALIVE;
 		else
 		cellState = MACellState.DEAD;
@@ -35,28 +35,18 @@ public class MACell {
 	}
 	
 	public MACell() {
-		
+		if(check == 0|| check == 1)
+			cellState = MACellState.ALIVE;
+			else
+			cellState = MACellState.DEAD;
+			check++;
 	}
 
 	/*
 	 *  Implementation is provided by extending classes (Rules)
 	 */
 	protected MACellState getNextCellState() {
-		//return cellState;
-		
-//		if (getRuleName().equalsIgnoreCase("DeadAliveRule")) {
-			if (getNeighborsCount(MACellState.ALIVE) >= 2) {
-				// If the cell has at least 2 neighboring cells
-				// that is alive, this cell should become alive.
-				return MACellState.ALIVE;
-			} else {
-				// Otherwise, the cell maintains its previous state.
-				return getCellState();
-			}
-//		}
-//		else {
-		//	return getCellState();
-//		}
+		return getCellState();
 	}
 
 	/*

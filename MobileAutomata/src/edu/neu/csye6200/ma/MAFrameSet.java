@@ -15,7 +15,7 @@ public class MAFrameSet implements Runnable {
 
 	private Map<Integer, MAFrame> maFrameRecord;
 	private int generationCount = 0;
-	private int genLimit = 3; // Maximum limit on generations at present
+	private int genLimit = 4; // Maximum limit on generations at present
 	private boolean completeFlag = false;
 	private boolean pauseFlag = false;
 	private MAFrame previousFrame = null;

@@ -20,7 +20,7 @@ public class MADriver {
 		 final char DYING_CELL_SYMBOL = '\u25a3'; // unicode for white with black square
 		 //new MAFrameSet().run();
 		
-		 	MAFrame maGeneration = new MAFrame(new MARule("DeadAliveRule"),3, 3);
+		 	MAFrame maGeneration = new MAFrame(RuleNames.BRIANSBRAIN,3, 3);
 		 	MAFrameSet maGenSet = new MAFrameSet(maGeneration);
 		 //	maGenSet.initialFrame(maGeneration);
 		 	maGenSet.run();

@@ -9,28 +9,36 @@ package edu.neu.csye6200.ma;
  */
 public class MAFrame {
 
-	private MARule ma_rule;
+	private RuleNames ruleName;
 	protected MACell[][] arrCells;
 	private int frameWidth;
 	private int frameHeight;
 
-	public MAFrame(MARule ma_rule, int frameWidth, int frameHeight) {
-		
-		this.ma_rule = ma_rule;
+	public MAFrame(RuleNames rule, int frameWidth, int frameHeight) {
+
+		this.ruleName = rule;
 		this.frameWidth = frameWidth;
 		this.frameHeight = frameHeight;
 		this.arrCells = new MACell[frameWidth][frameHeight];
-
-		for (int x = 0; x < frameWidth; x++)
-			for (int y = 0; y < frameHeight; y++)
-				this.arrCells[x][y] = new MACell(x, y, this);
-
+		frameInitialize();
 		
-
 	}
 
 	public MAFrame() {
-		
+
+	}
+	
+	private void frameInitialize() {
+		for (int x = 0; x < frameWidth; x++) {
+			for (int y = 0; y < frameHeight; y++) {
+				MACell ma = new MARule(this.ruleName);
+				ma.setCellXPos(x);
+				ma.setCellYPos(y);
+				ma.setFrame(this);
+				this.arrCells[x][y] = ma;
+			}
+
+		}
 	}
 
 	/**
@@ -39,14 +47,12 @@ public class MAFrame {
 	 * @param MAFrameCopy
 	 */
 	public MAFrame(MAFrame previousFrame) {
-		ma_rule = previousFrame.ma_rule; // Copying the same rule used by the instance
+		ruleName = previousFrame.ruleName; // Copying the same rule used by the instance
 		frameWidth = previousFrame.frameWidth;
 		frameHeight = previousFrame.frameHeight;
 		arrCells = new MACell[frameWidth][frameHeight];
 
-		for (int x = 0; x < frameWidth; x++)
-			for (int y = 0; y < frameHeight; y++)
-				arrCells[x][y] = new MACell(x, y, this);
+		frameInitialize();
 
 	}
 
@@ -90,7 +96,8 @@ public class MAFrame {
 	 */
 	public MAFrame createNextFrame() {
 		MAFrame newFrame = new MAFrame(this);
-		MACellState[][] newCellStates = nextCellStates();
+		MACellState[][] newCellStates = nextCellStates(); // calling nextCellStates using previousFrame to determine
+															// current state
 		for (int i = 0; i < getFrameWidth(); i++) {
 			for (int j = 0; j < getFrameHeight(); j++) {
 				newFrame.getCellAt(i, j).setState(newCellStates[i][j]);
@@ -99,22 +106,6 @@ public class MAFrame {
 
 		return newFrame;
 	}
-
-	/**
-	 * @return the ma_rule
-	 */
-	public MARule getMa_rule() {
-		return ma_rule;
-	}
-
-	/**
-	 * @param ma_rule the ma_rule to set
-	 */
-	public void setMa_rule(MARule ma_rule) {
-		this.ma_rule = ma_rule;
-	}
-
-
 
 	/**
 	 * @return the frameWidth
