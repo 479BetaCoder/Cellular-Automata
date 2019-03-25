@@ -1,31 +1,59 @@
-/**
- * 
- */
 package edu.neu.csye6200.ma;
 
-import java.util.ArrayList;
 import java.util.Map;
-//import java.util.TreeMap;
+import java.util.TreeMap;
 
 /**
  * @author RaviKumar
- *
+ * ClassName : MAFrameSet
+ * Description : Stores MAFrames in a Map which are generated using rule provided by the user. 
+ * Valuable Output : maFrameRecord which contains all the frames generated to produce a valid 2D Mobile Automata.
  */
+
 public class MAFrameSet implements Runnable {
 
 	private Map<Integer, MAFrame> maFrameRecord;
-	private int generationCount = 0;
-	private int genLimit = 4; // Maximum limit on generations at present
-	private boolean completeFlag = false;
-	private boolean pauseFlag = false;
-	private MAFrame previousFrame = null;
-	private ArrayList<MAFrame> lstMaFrames;
+	private int generationCount; //To keep track of frame generations.
+	private int genLimit; // User defined limit until which the frames are generated and stored in the MAP.
+	private boolean completeFlag; // Indicator to alert if the automata is complete. Using which we can show some custom message to the user.
+	private boolean pauseFlag; // Indicator to allow user pause a automata in progress to examine its validity.
+	private MAFrame previousFrame;
 
-	public MAFrameSet(MAFrame maframe) {
-		lstMaFrames = new ArrayList<MAFrame>();
-		lstMaFrames.add(maframe);
+	public MAFrameSet(MAFrame maframe,int genLimit) {
+
+		// Initializing the properties of a frameSet
+		initializeFrameSet();
+		this.genLimit = genLimit;
+		// Adding the Initial Frame to the Map.
+		addFrameToMap(generationCount, maframe);
+
+		// Initializing previousFrame with the current frame to create a next frame
+		// based on the rules.
 		previousFrame = maframe;
 	}
+
+	/*
+	 * Routine to initialize all the properties of a Frame Set. Must be called
+	 * before using the properties.
+	 */
+	private void initializeFrameSet() {
+
+		/*
+		 * Using Tree Map as we can allow user to retrieve any frame based on generation
+		 * and not just the previous generation. Also the search using Tree Map is
+		 * faster.
+		 */
+		this.maFrameRecord = new TreeMap<Integer, MAFrame>();
+		this.generationCount = 1; 
+		this.completeFlag = false; 
+		this.pauseFlag = false; 
+		this.previousFrame = null; 
+	}
+
+	/*
+	 * Function which gets triggered by user action and runs to create next frames
+	 * to drive the Mobile Automata
+	 */
 
 	@Override
 	public void run() {
@@ -37,14 +65,12 @@ public class MAFrameSet implements Runnable {
 				pauseFlag = true; // If we have not initialized a generation then pause and wait till we create
 			}
 
-			if (!pauseFlag) {
+			if (!pauseFlag) { // We can use a pause Flag through JButton once swing UI is done.
 				MAFrame nextFrame;
 				try {
-					nextFrame = previousFrame.createNextFrame();
-					lstMaFrames.add(nextFrame);
-					previousFrame = nextFrame;
-					generationCount++;
-
+					nextFrame = previousFrame.createNextFrame(); // Using previousFrame object, a new frame is getting created. 
+					addFrameToMap(generationCount++, nextFrame); // Once done, the frame is added to the MAP
+					previousFrame = nextFrame; // Now the frame created becomes previous Frame for the next generation.
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -55,13 +81,12 @@ public class MAFrameSet implements Runnable {
 
 	}
 
+	// Helper Method to add Frames to the Map  
 	public void addFrameToMap(int currentGen, MAFrame currentFrame) {
 		maFrameRecord.put(generationCount, currentFrame);
 	}
-
-	public void removeFrameFromMap(int generation) {
-		maFrameRecord.remove(generation);
-	}
+	
+	// Getters and Setters Section
 
 	/**
 	 * @return the maFrameRecord
@@ -145,20 +170,6 @@ public class MAFrameSet implements Runnable {
 	 */
 	public void setPreviousFrame(MAFrame previousFrame) {
 		this.previousFrame = previousFrame;
-	}
-
-	/**
-	 * @return the lstMaFrames
-	 */
-	public ArrayList<MAFrame> getLstMaFrames() {
-		return lstMaFrames;
-	}
-
-	/**
-	 * @param lstMaFrames the lstMaFrames to set
-	 */
-	public void setLstMaFrames(ArrayList<MAFrame> lstMaFrames) {
-		this.lstMaFrames = lstMaFrames;
 	}
 
 }

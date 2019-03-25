@@ -4,8 +4,15 @@
 package edu.neu.csye6200.ma;
 
 /**
- * @author RaviKumar
- *
+ * @author RaviKumar ClassName : MACell 
+ * Description : Contains MACellState in each MACell and determines Neighbor Cell Count for the desired state.
+ * Valuable Outcome: Gets the Neighbor Count based on the MACellState the Rule is looking for and forms as a base class for MARule.
+ */
+
+/*
+ * ENUM MACellState. Standardized the cell state as other primitive types can
+ * lead to poor maintainability as the code grows. Advantage : Can introduce new
+ * state when required without much code modification.
  */
 
 enum MACellState {
@@ -14,36 +21,32 @@ enum MACellState {
 
 public class MACell {
 
-	private MACellState cellState;
-	protected MAFrame frame;
-	private int cellXPos;
-	private int cellYPos;
-	private static int check = 0;
-	
+	private MACellState cellState; // Stores the MACellState for an MACell Object.
+	protected MAFrame frame; // Determines the frame to which the cell belongs.
+	private int cellXPos; // Stores the cell's Row position.
+	private int cellYPos; // Stores the cell's Column position.
+	private static int cellCount = 0;
 
-	// Initially the cell is in default state. (White square // for testing)
-	public MACell(int xPos, int yPos, MAFrame frame) {
-		this.cellXPos = xPos;
-		this.cellYPos = yPos;
-		this.frame = frame;
-		if(check == 0|| check == 1 || check == 2)
-		cellState = MACellState.ALIVE;
-		else
-		cellState = MACellState.DEAD;
-		check++;
-	//	System.out.println(check);
-	}
-	
 	public MACell() {
-		if(check == 0|| check == 1)
-			cellState = MACellState.ALIVE;
-			else
-			cellState = MACellState.DEAD;
-			check++;
+
+	}
+
+	// initializing cell states from MARule called by MAFrame
+	public MACell(MAFrame frame, MACellState cellState) {
+
+		this.frame = frame;
+		
+		if (cellCount == frame.getInitialAliveCell() || cellCount == frame.getInitialAliveCell()-1)
+			this.cellState = MACellState.ALIVE;
+		else
+			this.cellState = cellState;
+
+		cellCount++;
+
 	}
 
 	/*
-	 *  Implementation is provided by extending classes (Rules)
+	 * Implementation is provided by extending classes (Rules)
 	 */
 	protected MACellState getNextCellState() {
 		return getCellState();
@@ -54,70 +57,41 @@ public class MACell {
 	 * from the current state.
 	 */
 	protected void setState(MACellState state) {
-	if (!cellState.equals(state)) cellState = state;
+		if (!cellState.equals(state))
+			cellState = state;
 	}
 
-	// Returns a count of the current cell's alive neighbors.
-//	public int getAliveNeighborsCount() {
-//		int neighbors = 0;
-//		for (int row = Math.max(0, cellXPos - 1); row <= Math.min(frame.numRows() - 1, cellXPos + 1); row++) {
-//			for (int col = Math.max(0, cellYPos - 1); col <= Math.min(frame.numColumns() - 1, cellYPos + 1); col++) {
-//				if (row != cellXPos || col != cellYPos) { // Excluding the current cell
-//					if (frame.getCellAt(row, col).getState().getCellStatus() == 2) {
-//						neighbors++;
-//					}
-//				}
-//			}
-//		}
-//
-//		return neighbors;
-//	}
+	/*
+	 * Function to calculate the number of neighbors with a particular state for the
+	 * current cell. State to look after is provided as Input.
+	 */
 
 	protected int getNeighborsCount(MACellState state) {
-		
+
 		int desiredNeighbors = 0;
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < 3 && this.getCellYPos() + j >= 0 && this.getCellYPos() + j < 3) {
-					if (frame.getCellAt(this.getCellXPos() + i, this.getCellYPos() + j).getCellState().compareTo(state)==0) {
-						if(this.getCellXPos() != i || this.getCellYPos() !=j)
-						desiredNeighbors++;
+		try {
+
+			for (int i = -1; i < 2; i++) {  
+				for (int j = -1; j < 2; j++) {
+					if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < getFrame().getFrameRows()
+							&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getFrame().getFrameColumns()) {
+						if (getFrame().getCellAt(this.getCellXPos() + i, this.getCellYPos() + j).getCellState()
+								.compareTo(state) == 0) {
+							if (!(i == 0 && j == 0)) // should not consider the current cell as neighbor
+								desiredNeighbors++;
+						}
 					}
 				}
 			}
+
+		} catch (Exception e) {
+			System.out.println("Exception occured while getting Neighbor Count : " + e.toString());
+			desiredNeighbors = 0;
 		}
 		return desiredNeighbors;
 	}
 
-	protected int getDeadNeighborsCount(int x, int y, MAFrame previousFrame) {
-		int deadNeighbors = 0;
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				if (x + i >= 0 && x + i < frame.getFrameWidth() && y + j >= 0 && y + j < frame.getFrameHeight()) {
-					if (previousFrame.getCellAt(x + i, y + j).getCellState().equals(MACellState.DEAD)
-							&& !(i == 0 && j == 0)) {
-						deadNeighbors++;
-					}
-				}
-			}
-		}
-		return deadNeighbors;
-	}
-
-	protected int getDyingNeighborsCount(int x, int y, MAFrame previousFrame) {
-		int dyingNeighbors = 0;
-		for (int i = -1; i < 2; i++) {
-			for (int j = -1; j < 2; j++) {
-				if (x + i >= 0 && x + i < frame.getFrameWidth() && y + j >= 0 && y + j < frame.getFrameHeight()) {
-					if (previousFrame.getCellAt(x + i, y + j).getCellState().equals(MACellState.DYING)
-							&& !(i == 0 && j == 0)) {
-						dyingNeighbors++;
-					}
-				}
-			}
-		}
-		return dyingNeighbors;
-	}
+	// Getters and Setters
 
 	/**
 	 * @return the cellState
@@ -132,6 +106,7 @@ public class MACell {
 	public void setCellState(MACellState cellState) {
 		this.cellState = cellState;
 	}
+
 	/**
 	 * @return the frame
 	 */

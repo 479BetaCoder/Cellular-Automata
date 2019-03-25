@@ -4,34 +4,44 @@
 package edu.neu.csye6200.ma;
 
 /**
- * @author RaviKumar
- *
+ * @author RaviKumar 
+ * ClassName : MAFrame 
+ * Description : Holds 2D Array of MACell and contains methods to create next frames.
+ * Valuable Output : Creates future MAFrames by triggering methods in MARule using current MAFrame.
+ * 
  */
 public class MAFrame {
 
-	private RuleNames ruleName;
-	protected MACell[][] arrCells;
-	private int frameWidth;
-	private int frameHeight;
+	private RuleNames ruleName; // Holds RuleNames Enum passed by the user he wishes to see.
+	protected MACell[][] arrCells; // Holds MACells which contain MACellState.
+	private int frameRows; // Dimensions of the Frame passed by the user.
+	private int frameColumns; // Dimensions of the Frame passed by the user.
+	private int initialAliveCell = 0; // To start the frame generation, initially we are making the center cells alive. (This can be modified once UI is done)
 
-	public MAFrame(RuleNames rule, int frameWidth, int frameHeight) {
-
-		this.ruleName = rule;
-		this.frameWidth = frameWidth;
-		this.frameHeight = frameHeight;
-		this.arrCells = new MACell[frameWidth][frameHeight];
-		frameInitialize();
+	public MAFrame(RuleNames rule, int frameRows, int frameColumns, int initialAliveCell) {
 		
+		this.ruleName = rule;
+		this.frameRows = frameRows;
+		this.frameColumns = frameColumns;
+		this.arrCells = new MACell[frameRows][frameColumns];
+		this.setInitialAliveCell(initialAliveCell);
+		frameInitialize();
+
 	}
 
 	public MAFrame() {
 
 	}
-	
+
+	/*
+	 * Function to instantiate Cell Objects in a 2D array. Each cell reference is of
+	 * type MACell but the object is of MARule which is a child of MACell, whose
+	 * behaviour is dynamic based on the rule.
+	 */
 	private void frameInitialize() {
-		for (int x = 0; x < frameWidth; x++) {
-			for (int y = 0; y < frameHeight; y++) {
-				MACell ma = new MARule(this.ruleName);
+		for (int x = 0; x < frameRows; x++) {
+			for (int y = 0; y < frameColumns; y++) {
+				MACell ma = new MARule(this.ruleName,this,MACellState.DEAD);
 				ma.setCellXPos(x);
 				ma.setCellYPos(y);
 				ma.setFrame(this);
@@ -39,33 +49,55 @@ public class MAFrame {
 			}
 
 		}
+		
 	}
 
-	/**
-	 * existing MAFrame copy to be used by MARule to generate next generation
-	 *
-	 * @param MAFrameCopy
-	 */
+	// Creating a MAFrame object using the values of the previous frame.
 	public MAFrame(MAFrame previousFrame) {
 		ruleName = previousFrame.ruleName; // Copying the same rule used by the instance
-		frameWidth = previousFrame.frameWidth;
-		frameHeight = previousFrame.frameHeight;
-		arrCells = new MACell[frameWidth][frameHeight];
+		frameRows = previousFrame.frameRows;
+		frameColumns = previousFrame.frameColumns;
+		arrCells = new MACell[frameRows][frameColumns];
 
 		frameInitialize();
 
 	}
 
 	/*
-	 * Returns Cell at the specified row and column. If frame location is not valid,
-	 * a dead cell will be returned.
+	 * Function which is responsible to create Next Frame based on previous Frames
+	 * MACellState
 	 */
-	public MACell getCellAt(int row, int col) {
-		if ((row < 0) || (row > getFrameWidth())) {
-			throw new RuntimeException("Not a valid row to getCellAt: " + row);
+	public MAFrame createNextFrame() {
+		 // Creating a copy of the present frame.
+		MAFrame newFrame = new MAFrame(this);
+		try {
+		// Calling nextCellStates using previousFrame Object to determine current state.
+		MACellState[][] newCellStates = nextCellStates();
+
+		/*
+		 * Looping through each cell to determine the neighbors state and deciding the
+		 * cell's state based on the rules.
+		 */
+		for (int i = 0; i < getFrameRows(); i++) {
+			for (int j = 0; j < getFrameColumns(); j++) {
+				newFrame.getCellAt(i, j).setState(newCellStates[i][j]);
+			}
 		}
-		if ((col < 0) || (col > getFrameHeight())) {
-			throw new RuntimeException("Not a valid column to getCellAt: " + col);
+		}catch(Exception e) {
+			System.out.println("Exception occured while creating next Frame : " + e.toString());
+			
+		}
+
+		return newFrame;
+	}
+
+	// Helper Routine to get the cell at a specific location using the co-ordinates
+	public MACell getCellAt(int row, int col) {
+		if ((row < 0) || (row > getFrameRows())) {
+			throw new RuntimeException("The referenced cell at " + row + "is not valid row in the current frame.");
+		}
+		if ((col < 0) || (col > getFrameColumns())) {
+			throw new RuntimeException("The referenced cell at " + col + "is not valid column in the current frame.");
 		}
 		return arrCells[row][col];
 	}
@@ -77,10 +109,10 @@ public class MAFrame {
 	 */
 
 	public MACellState[][] nextCellStates() {
-		MACellState[][] nextStates = new MACellState[getFrameWidth()][getFrameHeight()];
+		MACellState[][] nextStates = new MACellState[getFrameRows()][getFrameColumns()];
 
-		for (int i = 0; i < getFrameWidth(); i++) {
-			for (int j = 0; j < getFrameHeight(); j++) {
+		for (int i = 0; i < getFrameRows(); i++) {
+			for (int j = 0; j < getFrameColumns(); j++) {
 				nextStates[i][j] = getCellAt(i, j).getNextCellState();
 
 			}
@@ -88,51 +120,50 @@ public class MAFrame {
 
 		return nextStates;
 	}
+	
+
+	// Getters and Setters
 
 	/**
-	 * Creating new generation using from old generation through rules
-	 * 
-	 * @throws CloneNotSupportedException
+	 * @return the frameRows
 	 */
-	public MAFrame createNextFrame() {
-		MAFrame newFrame = new MAFrame(this);
-		MACellState[][] newCellStates = nextCellStates(); // calling nextCellStates using previousFrame to determine
-															// current state
-		for (int i = 0; i < getFrameWidth(); i++) {
-			for (int j = 0; j < getFrameHeight(); j++) {
-				newFrame.getCellAt(i, j).setState(newCellStates[i][j]);
-			}
-		}
-
-		return newFrame;
+	public int getFrameRows() {
+		return frameRows;
 	}
 
 	/**
-	 * @return the frameWidth
+	 * @param frameRows the frameRows to set
 	 */
-	public int getFrameWidth() {
-		return frameWidth;
+	public void setFrameRows(int frameWidth) {
+		this.frameRows = frameWidth;
 	}
 
 	/**
-	 * @param frameWidth the frameWidth to set
+	 * @return the frameColumns
 	 */
-	public void setFrameWidth(int frameWidth) {
-		this.frameWidth = frameWidth;
+	public int getFrameColumns() {
+		return frameColumns;
 	}
 
 	/**
-	 * @return the frameHeight
+	 * @param frameColumns the frameColumns to set
 	 */
-	public int getFrameHeight() {
-		return frameHeight;
+	public void setFrameColumns(int frameHeight) {
+		this.frameColumns = frameHeight;
 	}
 
 	/**
-	 * @param frameHeight the frameHeight to set
+	 * @return the initialAliveCell
 	 */
-	public void setFrameHeight(int frameHeight) {
-		this.frameHeight = frameHeight;
+	public int getInitialAliveCell() {
+		return initialAliveCell;
+	}
+
+	/**
+	 * @param initialAliveCell the initialAliveCell to set
+	 */
+	public void setInitialAliveCell(int initialAliveCell) {
+		this.initialAliveCell = initialAliveCell;
 	}
 
 }
