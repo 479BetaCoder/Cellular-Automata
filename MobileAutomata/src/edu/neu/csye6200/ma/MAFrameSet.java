@@ -90,6 +90,7 @@ public class MAFrameSet extends JPanel implements Runnable {
 						currentFrame.setZipDir(true);
 					}
 				}
+
 				int testGen = 0; // To stop once we get the gold
 				for (int row = 0; row < currentFrame.getFrameRows(); row++) {
 
@@ -106,14 +107,6 @@ public class MAFrameSet extends JPanel implements Runnable {
 
 			}
 
-			// Checking if the Maze is solved
-			if (currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
-				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
-						.getCellState().compareTo(MACellState.ALIVE) == 0)
-					generationCount = genLimit;
-
-			}
-
 			// Checking if the TOPDOWNTREE simulation is done even before the Generation
 			// Count
 			if (currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
@@ -124,6 +117,28 @@ public class MAFrameSet extends JPanel implements Runnable {
 						break;
 					}
 				}
+			}
+
+			// Checking if the DEADALIVE simulation is done even before the Generation Count
+			if (currentFrame.getRuleName().compareTo(RuleNames.DEADALIVE) == 0
+					|| currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
+						.getCellState().compareTo(MACellState.ALIVE) == 0) {
+
+					generationCount = genLimit;
+
+				}
+
+			}
+
+			// Checking if the Maze is solved
+			if (currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 2)
+						.getCellState().compareTo(MACellState.ALIVE) == 0
+						|| currentFrame.getCellAt(currentFrame.getFrameRows() - 2, currentFrame.getFrameColumns() - 1)
+								.getCellState().compareTo(MACellState.ALIVE) == 0)
+					generationCount = genLimit - 1;
+
 			}
 
 			repaint(); // Paints the new state of the frame using paintComponent.
@@ -164,6 +179,12 @@ public class MAFrameSet extends JPanel implements Runnable {
 		int hoffset = getHorizontalOffset();
 		int voffset = getVerticalOffset();
 
+		if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+
+			currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
+					.setCellState(MACellState.ALIVE);
+		}
+
 		if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
 			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
 				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
@@ -177,6 +198,22 @@ public class MAFrameSet extends JPanel implements Runnable {
 					}
 
 					g.fillOval(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
+							squareheight - 1);
+				}
+
+			}
+		} else if (currentFrame.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0 && currentFrame.isZipDir()) {
+			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
+				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
+					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+						g.setColor(Color.BLACK);
+					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						g.setColor(Color.WHITE);
+					} else {
+						g.setColor(Color.BLUE);
+					}
+
+					g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
 							squareheight - 1);
 				}
 
@@ -198,32 +235,11 @@ public class MAFrameSet extends JPanel implements Runnable {
 				}
 
 			}
-		} else if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
-			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
-				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
-					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
-						g.setColor(Color.BLUE);
-					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
-						Color newColor = new Color(255, 215, 0);
-						g.setColor(newColor);
-					} else {
-						g.setColor(Color.BLACK);
-					}
-
-					g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
-							squareheight - 1);
-				}
-
-			}
 		} else {
 			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
 				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
-					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE
-							&& currentFrame.getRuleName() != RuleNames.GOLDWINNER) {
+					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 						g.setColor(Color.GREEN);
-					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE
-							&& currentFrame.getRuleName() == RuleNames.GOLDWINNER) {
-						g.setColor(Color.BLACK);
 					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 						g.setColor(Color.WHITE);
 					} else {

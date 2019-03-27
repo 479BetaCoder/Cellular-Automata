@@ -18,7 +18,7 @@ package edu.neu.csye6200.ma;
  */
 
 enum RuleNames {
-	DEADALIVERULE, BRIANSBRAIN, TOPDOWNTREE, MAZERUNNER, GOLDWINNER; // Currently going with these rules
+	DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, MAZERUNNER, GOLDWINNER; // Currently going with these rules
 }
 
 /*
@@ -28,7 +28,6 @@ enum RuleNames {
 public class MARule extends MACell implements IMARule {
 
 	private RuleNames ruleName; // holds the rule Name specified by the user.
-	
 
 	public MARule(RuleNames ruleName, MAFrame frame, MACellState initCellState) {
 		super(frame, initCellState);
@@ -40,7 +39,7 @@ public class MARule extends MACell implements IMARule {
 	@Override
 	public MACellState getNextCellState() {
 
-		if (ruleName.equals(RuleNames.DEADALIVERULE)) {
+		if (ruleName.equals(RuleNames.DEADALIVE)) {
 			return getDeadAliveState();
 
 		} else if (ruleName.equals(RuleNames.BRIANSBRAIN)) {
@@ -51,7 +50,7 @@ public class MARule extends MACell implements IMARule {
 		} else if (ruleName.equals(RuleNames.MAZERUNNER)) {
 			return getMazeState();
 		} else if (ruleName.equals(RuleNames.GOLDWINNER)) {
-			return getZipState();
+			return getGoldState();
 		} else {
 			return getCellState();
 		}
@@ -64,6 +63,7 @@ public class MARule extends MACell implements IMARule {
 	 * same number of rows and columns (both even), if center cells are initialized
 	 * to alive, entire frame becomes alive exactly at a generation Count equal to
 	 * row Count For example: 10*10 frame becomes alive when generationCount is 10.
+	 * Outcome: Due to 2 live cells every cell in the grid becomes alive.
 	 */
 	private MACellState getDeadAliveState() {
 		if (getNeighborsCount(MACellState.ALIVE) >= 2)
@@ -75,7 +75,9 @@ public class MARule extends MACell implements IMARule {
 	/*
 	 * RuleName --> BRIANSBRAIN Rule Description --> Case1 - If the cell is dead and
 	 * has 2 alive neighbors, the cell becomes alive. Case2 - If the cell is alive
-	 * it goes to dying state. Case3 - Any Dying Cell goes to dead state.
+	 * it goes to dying state. Case3 - Any Dying Cell goes to dead state. Outcome:
+	 * Creates chaotic oscillation patterns and sometimes spaceships. After some
+	 * steps, the spaceships fly-off and every cell becomes dead.
 	 */
 	private MACellState getBriansBrainState() {
 		if (getCellState().equals(MACellState.DEAD) && getNeighborsCount(MACellState.ALIVE) == 2)
@@ -99,7 +101,6 @@ public class MARule extends MACell implements IMARule {
 	 * split as they grow
 	 */
 
-	// TOPDOWNTREE RULE
 	private MACellState getTopDownState() {
 		if (getTDNeighborsCount(MACellState.ALIVE) == 2) {
 			return MACellState.DYING;
@@ -124,7 +125,7 @@ public class MARule extends MACell implements IMARule {
 	 * 
 	 * Outcome : Ant achieves the target of reaching home.
 	 */
-	// MAZERUNNER RULE
+
 	private MACellState getMazeState() {
 
 		if (getCellState().compareTo(MACellState.DEAD) == 0) {
@@ -245,11 +246,34 @@ public class MARule extends MACell implements IMARule {
 		return getCellState();
 	}
 
-	
-	// GOLDWINNER RULE
-	private MACellState getZipState() {
-
-		
+	/*
+	 * RULENAME: GOLDWINNER DESCRIPTION: An active cell leads to opening a zip of a
+	 * gold bag and getting its owner fortune. Initially the zip is opened from
+	 * bottom to top in a zig-zag pattern using the CellDirection flag Once the
+	 * active cell reaches the top, it slowly unzips the bag (black in color) and
+	 * displays the gold. 
+	 * 
+	 * unzipping - (ALIVE --> BLACK, DEAD --> WHITE, DYING --> BLUE)
+	 * unzipped - (ALIVE --> BLACK, DEAD --> GOLD, DYING --> BLUE)
+	 * 
+	 * Case1. Unzipping - 
+	 * 1a.  When there is alive cell - Cells check the row below them and direction is determined alternatively by the
+	 * CellDirection Flag. If the cell obtained is dying, we change the direction and return the same state.
+	 * If the cell has a dying cell below, we make it dead (white).
+	 * 1b.If a dying cell has two alive neighbors surrounding it (i.e., y-1 and y+1), the cell dies.
+	 * 
+	 * Case2. Unzipped - (i.e., the active cell reached the top) 
+	 * 2a. A dying cell becomes dead.
+	 * 2b. The alive cell is checked if there is any dead cells in the surrounding (i.e., y-1,y+1)
+	 * If the cell has atleast 1 dead cell, it becomes dying cell.
+	 * 
+	 * In all other cases, the same state is returned.
+	 * 
+	 * OUTCOME: A black bag containing gold is unzipped and the user gets a full bounty!!!
+	 * 
+	 * 
+	 */
+	private MACellState getGoldState() {
 
 		if (getFrame().isZipDir()) {
 			if (getCellState().compareTo(MACellState.ALIVE) == 0) {
@@ -288,7 +312,7 @@ public class MARule extends MACell implements IMARule {
 		} else {
 			if (getCellState().compareTo(MACellState.DYING) == 0) {
 				return MACellState.DEAD;
-			}else if(getCellState().compareTo(MACellState.ALIVE) == 0) {
+			} else if (getCellState().compareTo(MACellState.ALIVE) == 0) {
 				if (this.getCellXPos() >= 0 && this.getCellXPos() + 1 < getFrame().getFrameRows()
 						&& this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
 					if ((getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()

@@ -138,7 +138,7 @@ public class MAutomataDriver extends JPanel implements ActionListener {
 			rows = scnObj.nextInt();
 			System.out.println("Please enter columns you would like to see in the frame : ");
 			cols = scnObj.nextInt();
-			System.out.println("Please enter your rule choice : \nEnter 1 for " + RuleNames.DEADALIVERULE
+			System.out.println("Please enter your rule choice : \nEnter 1 for " + RuleNames.DEADALIVE
 					+ "\nEnter 2 for " + RuleNames.BRIANSBRAIN + "\nEnter 3 for " + RuleNames.TOPDOWNTREE
 					+ "\nEnter 4 for " + RuleNames.GOLDWINNER
 					+ "\nEnter 5 for " + RuleNames.MAZERUNNER);
@@ -157,7 +157,7 @@ public class MAutomataDriver extends JPanel implements ActionListener {
 			 * UI or passing it as a value.
 			 */
 			if (ruleNumber == 1) {
-				maFrameGen = new MAFrame(RuleNames.DEADALIVERULE, rows, cols, initAliveCell);
+				maFrameGen = new MAFrame(RuleNames.DEADALIVE, rows, cols, initAliveCell);
 			} else if (ruleNumber == 2) {
 				maFrameGen = new MAFrame(RuleNames.BRIANSBRAIN, rows, cols, initAliveCell);
 			} else if (ruleNumber == 3) {
