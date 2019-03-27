@@ -3,10 +3,13 @@
  */
 package edu.neu.csye6200.ma;
 
+import java.util.Random;
+
 /**
- * @author RaviKumar ClassName : MACell 
- * Description : Contains MACellState in each MACell and determines Neighbor Cell Count for the desired state.
- * Valuable Outcome: Gets the Neighbor Count based on the MACellState the Rule is looking for and forms as a base class for MARule.
+ * @author RaviKumar ClassName : MACell Description : Contains MACellState in
+ *         each MACell and determines Neighbor Cell Count for the desired state.
+ *         Valuable Outcome: Gets the Neighbor Count based on the MACellState
+ *         the Rule is looking for and forms as a base class for MARule.
  */
 
 /*
@@ -16,7 +19,7 @@ package edu.neu.csye6200.ma;
  */
 
 enum MACellState {
-	DEAD, ALIVE, DYING;
+	ALIVE, DEAD, DYING;
 }
 
 public class MACell {
@@ -25,7 +28,7 @@ public class MACell {
 	protected MAFrame frame; // Determines the frame to which the cell belongs.
 	private int cellXPos; // Stores the cell's Row position.
 	private int cellYPos; // Stores the cell's Column position.
-	private static int cellCount = 0;
+	private static int cellCount = 0; 
 
 	public MACell() {
 
@@ -36,11 +39,32 @@ public class MACell {
 
 		this.frame = frame;
 		
-		if (cellCount == frame.getInitialAliveCell() || cellCount == frame.getInitialAliveCell()-1)
-			this.cellState = MACellState.ALIVE;
-		else
-			this.cellState = cellState;
+			if (frame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+			if (cellCount == frame.getInitialAliveCell())
+				this.cellState = MACellState.ALIVE;
+			else
+				this.cellState = cellState;
+		} else if (frame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+			if (cellCount != 0) {
+				this.cellState = MACellState.values()[new Random().nextInt(3)];
+				if (this.cellState.compareTo(MACellState.ALIVE) == 0) {
+					this.cellState = MACellState.DEAD;
+				}
+			} else
+				this.cellState = MACellState.ALIVE;
 
+		}else if (frame.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
+			if (cellCount == frame.getInitialAliveCell())
+				this.cellState = MACellState.DYING;
+			else
+				this.cellState = MACellState.ALIVE;
+		}
+		else {
+			if (cellCount == frame.getInitialAliveCell() || cellCount == frame.getInitialAliveCell() - 1)
+				this.cellState = MACellState.ALIVE;
+			else
+				this.cellState = cellState;
+		}
 		cellCount++;
 
 	}
@@ -71,7 +95,7 @@ public class MACell {
 		int desiredNeighbors = 0;
 		try {
 
-			for (int i = -1; i < 2; i++) {  
+			for (int i = -1; i < 2; i++) {
 				for (int j = -1; j < 2; j++) {
 					if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < getFrame().getFrameRows()
 							&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getFrame().getFrameColumns()) {
@@ -91,6 +115,30 @@ public class MACell {
 		return desiredNeighbors;
 	}
 
+	// For TOPDOWNTREE
+	protected int getTDNeighborsCount(MACellState state) {
+
+		int desiredNeighbors = 0;
+		try {
+			for (int j = -1; j < 2; j++) {
+				if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
+						&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getFrame().getFrameColumns()) {
+					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + j).getCellState()
+							.compareTo(state) == 0) {
+						if (j != 0)
+							desiredNeighbors++;
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			System.out.println("Exception occured while getting Neighbor Count : " + e.toString());
+			desiredNeighbors = 0;
+		}
+		return desiredNeighbors;
+	}
+
+	
 	// Getters and Setters
 
 	/**

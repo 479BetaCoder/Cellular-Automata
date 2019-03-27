@@ -17,9 +17,13 @@ public class MAFrame {
 	private int frameRows; // Dimensions of the Frame passed by the user.
 	private int frameColumns; // Dimensions of the Frame passed by the user.
 	private int initialAliveCell = 0; // To start the frame generation, initially we are making the center cells alive. (This can be modified once UI is done)
-
+	private int cellDirection;
+	private boolean zipDir;
+	
 	public MAFrame(RuleNames rule, int frameRows, int frameColumns, int initialAliveCell) {
 		
+		this.zipDir = true;
+		this.cellDirection = 1;
 		this.ruleName = rule;
 		this.frameRows = frameRows;
 		this.frameColumns = frameColumns;
@@ -29,6 +33,20 @@ public class MAFrame {
 
 	}
 
+	/**
+	 * @return the ruleName
+	 */
+	public RuleNames getRuleName() {
+		return ruleName;
+	}
+
+	/**
+	 * @param ruleName the ruleName to set
+	 */
+	public void setRuleName(RuleNames ruleName) {
+		this.ruleName = ruleName;
+	}
+
 	public MAFrame() {
 
 	}
@@ -36,7 +54,7 @@ public class MAFrame {
 	/*
 	 * Function to instantiate Cell Objects in a 2D array. Each cell reference is of
 	 * type MACell but the object is of MARule which is a child of MACell, whose
-	 * behaviour is dynamic based on the rule.
+	 * behavior is dynamic based on the rule.
 	 */
 	private void frameInitialize() {
 		for (int x = 0; x < frameRows; x++) {
@@ -58,7 +76,11 @@ public class MAFrame {
 		frameRows = previousFrame.frameRows;
 		frameColumns = previousFrame.frameColumns;
 		arrCells = new MACell[frameRows][frameColumns];
-
+		if(previousFrame.cellDirection == 1) {
+		cellDirection = -1;
+		}else {
+			cellDirection = 1;
+		}
 		frameInitialize();
 
 	}
@@ -93,10 +115,10 @@ public class MAFrame {
 
 	// Helper Routine to get the cell at a specific location using the co-ordinates
 	public MACell getCellAt(int row, int col) {
-		if ((row < 0) || (row > getFrameRows())) {
+		if ((row < 0) || (row >= getFrameRows())) {
 			throw new RuntimeException("The referenced cell at " + row + "is not valid row in the current frame.");
 		}
-		if ((col < 0) || (col > getFrameColumns())) {
+		if ((col < 0) || (col >= getFrameColumns())) {
 			throw new RuntimeException("The referenced cell at " + col + "is not valid column in the current frame.");
 		}
 		return arrCells[row][col];
@@ -164,6 +186,34 @@ public class MAFrame {
 	 */
 	public void setInitialAliveCell(int initialAliveCell) {
 		this.initialAliveCell = initialAliveCell;
+	}
+
+	/**
+	 * @return the cellDirection
+	 */
+	public int getCellDirection() {
+		return cellDirection;
+	}
+
+	/**
+	 * @param cellDirection the cellDirection to set
+	 */
+	public void setCellDirection(int cellDirection) {
+		this.cellDirection = cellDirection;
+	}
+
+	/**
+	 * @return the zipDir
+	 */
+	public boolean isZipDir() {
+		return zipDir;
+	}
+
+	/**
+	 * @param zipDir the zipDir to set
+	 */
+	public void setZipDir(boolean zipDir) {
+		this.zipDir = zipDir;
 	}
 
 }
