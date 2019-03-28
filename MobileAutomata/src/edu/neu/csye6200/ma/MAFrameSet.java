@@ -80,7 +80,16 @@ public class MAFrameSet extends JPanel implements Runnable {
 			addFrameToMap(generationCount++, nextFrame); // Once done, the frame is added to the MAP
 			currentFrame = nextFrame;
 
-			// Checking if the ZIP is finished
+			// Checking if the Maze is solved
+			if (currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
+						.getCellState().compareTo(MACellState.ALIVE) == 0)
+					generationCount = genLimit;
+			}
+
+			repaint(); // Paints the new state of the frame using paintComponent.
+
+			// Checking if the UNZIPPING is finished
 			if (currentFrame.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
 				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
 					if (currentFrame.getCellAt(0, col).getCellState().compareTo(MACellState.DEAD) == 0) {
@@ -91,6 +100,7 @@ public class MAFrameSet extends JPanel implements Runnable {
 					}
 				}
 
+				// Checking for GOLDWINNER Simulation is done
 				int testGen = 0; // To stop once we get the gold
 				for (int row = 0; row < currentFrame.getFrameRows(); row++) {
 
@@ -104,12 +114,9 @@ public class MAFrameSet extends JPanel implements Runnable {
 					}
 
 				}
-
-			}
-
-			// Checking if the TOPDOWNTREE simulation is done even before the Generation
-			// Count
-			if (currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+				// Checking if the TOPDOWNTREE simulation is done even before the Generation
+				// Count
+			} else if (currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
 				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
 					if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, col).getCellState()
 							.compareTo(MACellState.ALIVE) == 0) {
@@ -117,31 +124,30 @@ public class MAFrameSet extends JPanel implements Runnable {
 						break;
 					}
 				}
-			}
-
-			// Checking if the DEADALIVE simulation is done even before the Generation Count
-			if (currentFrame.getRuleName().compareTo(RuleNames.DEADALIVE) == 0
-					|| currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+				// Checking if the DEADALIVE simulation is done even before the Generation Count
+			} else if (currentFrame.getRuleName().compareTo(RuleNames.DEADALIVE) == 0) {
 				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
 						.getCellState().compareTo(MACellState.ALIVE) == 0) {
 
 					generationCount = genLimit;
-
+					break;
 				}
 
+			} // Checking if BriansBrain is solved
+			else {
+				int bSim = 0;
+				for (int row = 0; row < currentFrame.getFrameRows(); row++) {
+					for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
+						if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+							bSim++;
+						}
+					}
+				}
+				if (bSim == currentFrame.getFrameRows() * currentFrame.getFrameColumns()) {
+					generationCount = genLimit;
+					break;
+				}
 			}
-
-			// Checking if the Maze is solved
-			if (currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
-				if (currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 2)
-						.getCellState().compareTo(MACellState.ALIVE) == 0
-						|| currentFrame.getCellAt(currentFrame.getFrameRows() - 2, currentFrame.getFrameColumns() - 1)
-								.getCellState().compareTo(MACellState.ALIVE) == 0)
-					generationCount = genLimit - 1;
-
-			}
-
-			repaint(); // Paints the new state of the frame using paintComponent.
 
 			try {
 				Thread.sleep(this.sleepTime);
@@ -180,12 +186,38 @@ public class MAFrameSet extends JPanel implements Runnable {
 		int voffset = getVerticalOffset();
 
 		if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
+				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
+					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+						g.setColor(Color.BLACK);
+					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						g.setColor(Color.WHITE);
+					} else {
+						g.setColor(Color.BLUE);
+					}
+					g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
+							squareheight - 1);
+				}
+			}
+		} else if (currentFrame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
+				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
+					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+						g.setColor(Color.BLACK);
+					} else if (currentFrame.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						g.setColor(Color.WHITE);
+					} else {
+						g.setColor(Color.BLUE);
+					}
 
-			currentFrame.getCellAt(currentFrame.getFrameRows() - 1, currentFrame.getFrameColumns() - 1)
-					.setCellState(MACellState.ALIVE);
-		}
+					g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
+							squareheight - 1);
 
-		if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+				}
+
+			}
+
+		} else if (generationCount == genLimit && currentFrame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
 			for (int row = 0; row < currentFrame.getFrameRows(); row++) {
 				for (int col = 0; col < currentFrame.getFrameColumns(); col++) {
 					if (currentFrame.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
@@ -260,7 +292,8 @@ public class MAFrameSet extends JPanel implements Runnable {
 		paused = true;
 	}
 
-	// Helper methods for painting the Frame
+	// Helper methods for calculating the dimensions and helping in filling the
+	// rectangle
 	private int getSquareWidth() {
 		return getSize().width / currentFrame.getFrameColumns();
 	}

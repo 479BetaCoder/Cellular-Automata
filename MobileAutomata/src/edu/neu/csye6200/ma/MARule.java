@@ -117,98 +117,46 @@ public class MARule extends MACell implements IMARule {
 	 * always starts from (0,0) and travels only in Forward-Downward direction.
 	 * (i.e., no turning backwards or top-wards)
 	 * 
-	 * Case 1. If there are 2 white cell in ant path, ant prefers forward move Case
-	 * 2. If there are 2 blue cells in ant path, ant prefers downward move killing
-	 * the blue (dying state cell) to reach home faster. Case 3. Irrespective of the
-	 * cells, if the ant reaches the boundary, it moves in one direction towards the
+	 * Case 1. If there are 2 white cells in ant path, ant prefers forward move.
+	 * Case2. If there are 2 blue cells in ant path, ant prefers downward move killing
+	 * the blue (dying state cell) to reach home faster. 
+	 * Case 3. Irrespective of the cells, if the ant reaches the boundary, it moves in one direction towards the
 	 * home as it is too hungry.
 	 * 
 	 * Outcome : Ant achieves the target of reaching home.
 	 */
 
 	private MACellState getMazeState() {
-
+		
+		// For Dead cells
 		if (getCellState().compareTo(MACellState.DEAD) == 0) {
-
-			if (this.getCellXPos() >= 0 && this.getCellXPos() < getFrame().getFrameRows() && this.getCellYPos() - 1 >= 0
-					&& this.getCellYPos() - 1 < getFrame().getFrameColumns()) {
-
-				if (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-						.compareTo(MACellState.ALIVE) == 0)
-					return MACellState.ALIVE;
-			}
-
-			if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
-					&& this.getCellYPos() >= 0 && this.getCellYPos() < getFrame().getFrameColumns()) {
-
-				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-						.compareTo(MACellState.ALIVE) == 0) {
-
-					if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
-							&& this.getCellYPos() + 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-
-						if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
-								.compareTo(MACellState.DYING) == 0)
-							return MACellState.ALIVE;
-					}
-
-				}
-
-			}
-
-			// Last Row
-			if (this.getCellXPos() == getFrame().getFrameRows() - 1) {
-				if (this.getCellYPos() - 1 >= 0) {
-					if (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-							.compareTo(MACellState.ALIVE) == 0)
-						return MACellState.ALIVE;
-				}
-				return getCellState();
-
-			}
+			
 			// Last Column
-			else if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
+			if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
 				if (this.getCellXPos() - 1 >= 0) {
 					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 						return MACellState.ALIVE;
 				}
-				return getCellState();
+
 			}
-
-			// LastRow AND LastColumn
-			else if (this.getCellYPos() == getFrame().getFrameColumns() - 1
-					&& this.getCellXPos() == getFrame().getFrameRows() - 1) {
-
-				if ((getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+			if (this.getCellYPos() - 1 >= 0) {
+				if (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 						.compareTo(MACellState.ALIVE) == 0)
-						|| (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-								.compareTo(MACellState.ALIVE) == 0)) {
 					return MACellState.ALIVE;
+			}
+			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
+				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+						.compareTo(MACellState.ALIVE) == 0) {
+					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
+							.compareTo(MACellState.DYING) == 0)
+						return MACellState.ALIVE;
 				}
-				return getCellState();
 			}
 
 			// For Dying cells
 		} else if (getCellState().compareTo(MACellState.DYING) == 0) {
 
-			if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
-					&& this.getCellYPos() >= 0 && this.getCellYPos() < getFrame().getFrameColumns()) {
-
-				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-						.compareTo(MACellState.ALIVE) == 0) {
-
-					if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
-							&& this.getCellYPos() + 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-
-						if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
-								.compareTo(MACellState.DYING) == 0)
-							return MACellState.ALIVE;
-					}
-				}
-
-			}
-
 			// Last Row
 			if (this.getCellXPos() == getFrame().getFrameRows() - 1) {
 				if (this.getCellYPos() - 1 >= 0) {
@@ -219,26 +167,24 @@ public class MARule extends MACell implements IMARule {
 				return getCellState();
 			}
 			// Last Column
-			else if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
+			if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
 				if (this.getCellXPos() - 1 >= 0) {
 					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 						return MACellState.ALIVE;
 				}
-				return getCellState();
+
 			}
+			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
 
-			// LastRow AND LastColumn
-			else if (this.getCellYPos() == getFrame().getFrameColumns() - 1
-					&& this.getCellXPos() == getFrame().getFrameRows() - 1) {
+				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+						.compareTo(MACellState.ALIVE) == 0) {
+					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
+							.compareTo(MACellState.DYING) == 0)
+						return MACellState.ALIVE;
 
-				if ((getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-						.compareTo(MACellState.ALIVE) == 0)
-						|| (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-								.compareTo(MACellState.ALIVE) == 0)) {
-					return MACellState.ALIVE;
 				}
-				return getCellState();
+
 			}
 
 		} else if (getCellState().compareTo(MACellState.ALIVE) == 0)
@@ -251,25 +197,27 @@ public class MARule extends MACell implements IMARule {
 	 * gold bag and getting its owner fortune. Initially the zip is opened from
 	 * bottom to top in a zig-zag pattern using the CellDirection flag Once the
 	 * active cell reaches the top, it slowly unzips the bag (black in color) and
-	 * displays the gold. 
+	 * displays the gold.
 	 * 
-	 * unzipping - (ALIVE --> BLACK, DEAD --> WHITE, DYING --> BLUE)
-	 * unzipped - (ALIVE --> BLACK, DEAD --> GOLD, DYING --> BLUE)
+	 * unzipping - (ALIVE --> BLACK, DEAD --> WHITE, DYING --> BLUE) unzipped -
+	 * (ALIVE --> BLACK, DEAD --> GOLD, DYING --> BLUE)
 	 * 
-	 * Case1. Unzipping - 
-	 * 1a.  When there is alive cell - Cells check the row below them and direction is determined alternatively by the
-	 * CellDirection Flag. If the cell obtained is dying, we change the direction and return the same state.
-	 * If the cell has a dying cell below, we make it dead (white).
-	 * 1b.If a dying cell has two alive neighbors surrounding it (i.e., y-1 and y+1), the cell dies.
+	 * Case1. Unzipping - 1a. When there is alive cell - Cells check the row below
+	 * them and direction is determined alternatively by the CellDirection Flag. If
+	 * the cell obtained is dying, we change the direction and return the same
+	 * state. If the cell has a dying cell below, we make it dead (white). 1b.If a
+	 * dying cell has two alive neighbors surrounding it (i.e., y-1 and y+1), the
+	 * cell dies.
 	 * 
-	 * Case2. Unzipped - (i.e., the active cell reached the top) 
-	 * 2a. A dying cell becomes dead.
-	 * 2b. The alive cell is checked if there is any dead cells in the surrounding (i.e., y-1,y+1)
-	 * If the cell has atleast 1 dead cell, it becomes dying cell.
+	 * Case2. Unzipped - (i.e., the active cell reached the top) 2a. A dying cell
+	 * becomes dead. 2b. The alive cell is checked if there is any dead cells in the
+	 * surrounding (i.e., y-1,y+1) If the cell has atleast 1 dead cell, it becomes
+	 * dying cell.
 	 * 
 	 * In all other cases, the same state is returned.
 	 * 
-	 * OUTCOME: A black bag containing gold is unzipped and the user gets a full bounty!!!
+	 * OUTCOME: A black bag containing gold is unzipped and the user gets a full
+	 * bounty!!!
 	 * 
 	 * 
 	 */
@@ -277,8 +225,7 @@ public class MARule extends MACell implements IMARule {
 
 		if (getFrame().isZipDir()) {
 			if (getCellState().compareTo(MACellState.ALIVE) == 0) {
-				if (this.getCellXPos() >= 0 && this.getCellXPos() + 1 < getFrame().getFrameRows()
-						&& this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
+				if (this.getCellXPos() + 1 < getFrame().getFrameRows() && this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
 					if (getFrame().getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getFrame().getCellDirection())
 							.getCellState().compareTo(MACellState.DYING) == 0) {
 						if (getFrame().getCellDirection() == 1) {
@@ -297,8 +244,7 @@ public class MARule extends MACell implements IMARule {
 				}
 
 			} else if (getCellState().compareTo(MACellState.DYING) == 0) {
-				if (this.getCellXPos() >= 0 && this.getCellXPos() + 1 < getFrame().getFrameRows()
-						&& this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
+				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
 					if ((getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 							&& (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
@@ -313,8 +259,7 @@ public class MARule extends MACell implements IMARule {
 			if (getCellState().compareTo(MACellState.DYING) == 0) {
 				return MACellState.DEAD;
 			} else if (getCellState().compareTo(MACellState.ALIVE) == 0) {
-				if (this.getCellXPos() >= 0 && this.getCellXPos() + 1 < getFrame().getFrameRows()
-						&& this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
+				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
 					if ((getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 							.compareTo(MACellState.DEAD) == 0)
 							|| (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
