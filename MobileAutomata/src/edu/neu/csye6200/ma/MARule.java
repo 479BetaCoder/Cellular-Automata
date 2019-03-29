@@ -25,12 +25,12 @@ enum RuleNames {
  * IMARule is an interface/contract which forces MARule to specify
  * getNextCellState() so it can override base class method
  */
-public class MARule extends MACell implements IMARule {
+public class MARule extends MACell {
 
 	private RuleNames ruleName; // holds the rule Name specified by the user.
 
-	public MARule(RuleNames ruleName, MAFrame frame, MACellState initCellState) {
-		super(frame, initCellState);
+	public MARule(RuleNames ruleName, MARegion region, MACellState initCellState) {
+		super(region, initCellState);
 		this.ruleName = ruleName;
 	}
 
@@ -61,8 +61,8 @@ public class MARule extends MACell implements IMARule {
 	 * RuleName --> DeadAlive Rule Description --> If the cell has at least 2
 	 * neighboring cells that are alive, cell should become alive. Pattern : For
 	 * same number of rows and columns (both even), if center cells are initialized
-	 * to alive, entire frame becomes alive exactly at a generation Count equal to
-	 * row Count For example: 10*10 frame becomes alive when generationCount is 10.
+	 * to alive, entire region becomes alive exactly at a generation Count equal to
+	 * row Count For example: 10*10 region becomes alive when generationCount is 10.
 	 * Outcome: Due to 2 live cells every cell in the grid becomes alive.
 	 */
 	private MACellState getDeadAliveState() {
@@ -132,23 +132,23 @@ public class MARule extends MACell implements IMARule {
 		if (getCellState().compareTo(MACellState.DEAD) == 0) {
 			
 			// Last Column
-			if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
+			if (this.getCellYPos() == getRegion().getRegionColumns() - 1) {
 				if (this.getCellXPos() - 1 >= 0) {
-					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 						return MACellState.ALIVE;
 				}
 
 			}
 			if (this.getCellYPos() - 1 >= 0) {
-				if (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
+				if (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 						.compareTo(MACellState.ALIVE) == 0)
 					return MACellState.ALIVE;
 			}
-			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
+				if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 						.compareTo(MACellState.ALIVE) == 0) {
-					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
 							.compareTo(MACellState.DYING) == 0)
 						return MACellState.ALIVE;
 				}
@@ -158,28 +158,28 @@ public class MARule extends MACell implements IMARule {
 		} else if (getCellState().compareTo(MACellState.DYING) == 0) {
 
 			// Last Row
-			if (this.getCellXPos() == getFrame().getFrameRows() - 1) {
+			if (this.getCellXPos() == getRegion().getRegionRows() - 1) {
 				if (this.getCellYPos() - 1 >= 0) {
-					if (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 						return MACellState.ALIVE;
 				}
 				return getCellState();
 			}
 			// Last Column
-			if (this.getCellYPos() == getFrame().getFrameColumns() - 1) {
+			if (this.getCellYPos() == getRegion().getRegionColumns() - 1) {
 				if (this.getCellXPos() - 1 >= 0) {
-					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
 						return MACellState.ALIVE;
 				}
 
 			}
-			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
+			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
 
-				if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
+				if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
 						.compareTo(MACellState.ALIVE) == 0) {
-					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
 							.compareTo(MACellState.DYING) == 0)
 						return MACellState.ALIVE;
 
@@ -223,31 +223,31 @@ public class MARule extends MACell implements IMARule {
 	 */
 	private MACellState getGoldState() {
 
-		if (getFrame().isZipDir()) {
+		if (getRegion().isZipDir()) {
 			if (getCellState().compareTo(MACellState.ALIVE) == 0) {
-				if (this.getCellXPos() + 1 < getFrame().getFrameRows() && this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-					if (getFrame().getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getFrame().getCellDirection())
+				if (this.getCellXPos() + 1 < getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
+					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getRegion().getCellDirection())
 							.getCellState().compareTo(MACellState.DYING) == 0) {
-						if (getFrame().getCellDirection() == 1) {
-							getFrame().setCellDirection(-1);
+						if (getRegion().getCellDirection() == 1) {
+							getRegion().setCellDirection(-1);
 						} else {
-							getFrame().setCellDirection(1);
+							getRegion().setCellDirection(1);
 						}
 						return MACellState.DYING;
 					}
-					if (getFrame().getCellAt(this.getCellXPos() + 1, this.getCellYPos()).getCellState()
+					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.DYING) == 0
-							&& getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
+							&& getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 									.compareTo(MACellState.DYING) == 0)
 						return MACellState.DEAD;
 
 				}
 
 			} else if (getCellState().compareTo(MACellState.DYING) == 0) {
-				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-					if ((getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
+				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
+					if ((getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 							.compareTo(MACellState.ALIVE) == 0)
-							&& (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
+							&& (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
 									.compareTo(MACellState.ALIVE) == 0)) {
 						return MACellState.DEAD;
 					}
@@ -259,10 +259,10 @@ public class MARule extends MACell implements IMARule {
 			if (getCellState().compareTo(MACellState.DYING) == 0) {
 				return MACellState.DEAD;
 			} else if (getCellState().compareTo(MACellState.ALIVE) == 0) {
-				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getFrame().getFrameColumns()) {
-					if ((getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
+				if (this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
+					if ((getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
 							.compareTo(MACellState.DEAD) == 0)
-							|| (getFrame().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
+							|| (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() + 1).getCellState()
 									.compareTo(MACellState.DEAD) == 0)) {
 						return MACellState.DYING;
 					}

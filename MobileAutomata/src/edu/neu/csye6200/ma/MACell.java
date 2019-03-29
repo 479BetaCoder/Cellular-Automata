@@ -4,6 +4,7 @@
 package edu.neu.csye6200.ma;
 
 import java.util.Random;
+import java.util.logging.Logger;
 
 /**
  * @author RaviKumar ClassName : MACell Description : Contains MACellState in
@@ -22,29 +23,33 @@ enum MACellState {
 	ALIVE, DEAD, DYING;
 }
 
-public class MACell {
+public class MACell implements IMARule{
 
 	private MACellState cellState; // Stores the MACellState for an MACell Object.
-	protected MAFrame frame; // Determines the frame to which the cell belongs.
+	protected MARegion region; // Determines the region to which the cell belongs.
 	private int cellXPos; // Stores the cell's Row position.
 	private int cellYPos; // Stores the cell's Column position.
-	private static int cellCount = 0; 
+	private static int cellCount = 0; // useful in initializing cell states
+	
+	// For Logging application process to the console.
+	private static Logger log = Logger.getLogger(MACell.class.getName());
+	
 
 	public MACell() {
 
 	}
 
-	// initializing cell states from MARule called by MAFrame
-	public MACell(MAFrame frame, MACellState cellState) {
+	// initializing cell states from MARule called by MARegion
+	public MACell(MARegion region, MACellState cellState) {
 
-		this.frame = frame;
+		this.region = region;
 		
-			if (frame.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
-			if (cellCount == frame.getInitialAliveCell())
+			if (region.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+			if (cellCount == region.getInitialAliveCell())
 				this.cellState = MACellState.ALIVE;
 			else
 				this.cellState = cellState;
-		} else if (frame.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+		} else if (region.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
 			if (cellCount != 0) {
 				this.cellState = MACellState.values()[new Random().nextInt(3)];
 				if (this.cellState.compareTo(MACellState.ALIVE) == 0) {
@@ -53,14 +58,14 @@ public class MACell {
 			} else
 				this.cellState = MACellState.ALIVE;
 
-		}else if (frame.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
-			if (cellCount == frame.getInitialAliveCell())
+		}else if (region.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
+			if (cellCount == region.getInitialAliveCell())
 				this.cellState = MACellState.DYING;
 			else
 				this.cellState = MACellState.ALIVE;
 		}
 		else {
-			if (cellCount == frame.getInitialAliveCell() || cellCount == frame.getInitialAliveCell() - 1)
+			if (cellCount == region.getInitialAliveCell() || cellCount == region.getInitialAliveCell() - 1)
 				this.cellState = MACellState.ALIVE;
 			else
 				this.cellState = cellState;
@@ -72,7 +77,7 @@ public class MACell {
 	/*
 	 * Implementation is provided by extending classes (Rules)
 	 */
-	protected MACellState getNextCellState() {
+	 public MACellState getNextCellState() {
 		return getCellState();
 	}
 
@@ -97,9 +102,9 @@ public class MACell {
 
 			for (int i = -1; i < 2; i++) {
 				for (int j = -1; j < 2; j++) {
-					if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < getFrame().getFrameRows()
-							&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getFrame().getFrameColumns()) {
-						if (getFrame().getCellAt(this.getCellXPos() + i, this.getCellYPos() + j).getCellState()
+					if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < getRegion().getRegionRows()
+							&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getRegion().getRegionColumns()) {
+						if (getRegion().getCellAt(this.getCellXPos() + i, this.getCellYPos() + j).getCellState()
 								.compareTo(state) == 0) {
 							if (!(i == 0 && j == 0)) // should not consider the current cell as neighbor
 								desiredNeighbors++;
@@ -109,7 +114,7 @@ public class MACell {
 			}
 
 		} catch (Exception e) {
-			System.out.println("Exception occured while getting Neighbor Count : " + e.toString());
+			log.severe("Exception occured while getting Neighbor Count : " + e.toString());
 			desiredNeighbors = 0;
 		}
 		return desiredNeighbors;
@@ -121,9 +126,9 @@ public class MACell {
 		int desiredNeighbors = 0;
 		try {
 			for (int j = -1; j < 2; j++) {
-				if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getFrame().getFrameRows()
-						&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getFrame().getFrameColumns()) {
-					if (getFrame().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + j).getCellState()
+				if (this.getCellXPos() - 1 >= 0 && this.getCellXPos() - 1 < getRegion().getRegionRows()
+						&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getRegion().getRegionColumns()) {
+					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + j).getCellState()
 							.compareTo(state) == 0) {
 						if (j != 0)
 							desiredNeighbors++;
@@ -132,7 +137,7 @@ public class MACell {
 			}
 
 		} catch (Exception e) {
-			System.out.println("Exception occured while getting Neighbor Count : " + e.toString());
+			log.severe("Exception occured while getting Neighbor Count : " + e.toString());
 			desiredNeighbors = 0;
 		}
 		return desiredNeighbors;
@@ -156,17 +161,17 @@ public class MACell {
 	}
 
 	/**
-	 * @return the frame
+	 * @return the region
 	 */
-	public MAFrame getFrame() {
-		return frame;
+	public MARegion getRegion() {
+		return region;
 	}
 
 	/**
-	 * @param frame the frame to set
+	 * @param region the region to set
 	 */
-	public void setFrame(MAFrame frame) {
-		this.frame = frame;
+	public void setRegion(MARegion region) {
+		this.region = region;
 	}
 
 	/**

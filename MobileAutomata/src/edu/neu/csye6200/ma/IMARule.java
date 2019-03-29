@@ -10,5 +10,5 @@ package edu.neu.csye6200.ma;
  *
  */
 public interface IMARule {
-	public MACellState getNextCellState();
+	 public MACellState getNextCellState();
 }

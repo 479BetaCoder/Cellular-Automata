@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Scanner;
+import java.util.logging.Logger;
 
 import javax.swing.AbstractButton;
 import javax.swing.Box;
@@ -20,101 +21,143 @@ import javax.swing.UIManager;
 
 /**
  * @author RaviKumar ClassName : MAutomataDriver Description : Main class for
- *         displaying valid 2D automata in Swing UI. Note : Not all features are
- *         included. Will be including them in UI part. Valuable Output : Gives
- *         a window to start the Automata and also Pause it. Uses MAFrameSet
- *         extensively to generate consecutive frames.
+ *         displaying valid 2D automata in Swing UI.  
+ *         Valuable Output : Generates a UI and UI action elements. Uses MARegionSet
+ *         extensively to generate consecutive regions.
  */
-public class MAutomataDriver extends JPanel implements ActionListener {
+
+public class MAutomataDriver extends JPanel {
 
 	private static final long serialVersionUID = 1L;
-	private MAFrameSet frameSet;
-	private JButton startButton, pauseButton;
+	
+	protected static JButton startButton, pauseButton, rewindButton;
 
-	// Display frame
+	// Display region
 	private static final int FRAME_WIDTH = 520;
 	private static final int FRAME_HEIGHT = 590;
 	private static final int BUTTONS_HEIGHT = 80;
 
-	// Constructor to initialize the entire UI. Will be enhanced in the final UI
-	// design.
-	public MAutomataDriver(MAFrameSet frameSet) {
+	// For Logging application process to the console.
+	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 
-		this.frameSet = frameSet;
+	// Constructor to initialize the entire UI. 
+	public MAutomataDriver(MARegionSet regionSet) {
 
 		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (Exception e) {
-			System.out.println("Error setting UI: " + e);
-		}
 
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); // for getting system's look and feel.
+			} catch (ClassNotFoundException e) {
+				log.severe("OOPS!! You have run into trouble creating the UIManager. Error Details : " + e.toString());
 
-		// Setting preferred Sizes
-		frameSet.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT - BUTTONS_HEIGHT));
-		frameSet.setMinimumSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT - BUTTONS_HEIGHT));
-		add(frameSet);
+			}
 
-		add(Box.createRigidArea(new Dimension(FRAME_WIDTH, 5)));
+			setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
-		// Constructing the JPanel for display
-		JPanel panel1 = new JPanel();
-		panel1.setSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
-		panel1.setPreferredSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
-		panel1.setMaximumSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
-		panel1.setBackground(Color.WHITE);
+			// Setting preferred Sizes
+			regionSet.setPreferredSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT - BUTTONS_HEIGHT));
+			regionSet.setMinimumSize(new Dimension(FRAME_WIDTH, FRAME_HEIGHT - BUTTONS_HEIGHT));
+			add(regionSet);
 
-		// Creating required buttons to help User start the Automata.
-		startButton = new JButton("Start");
-		// place button at center, left position
-		startButton.setVerticalTextPosition(AbstractButton.CENTER);
-		startButton.setHorizontalTextPosition(AbstractButton.LEFT);
-		startButton.setMnemonic(KeyEvent.VK_D);
-		startButton.setActionCommand("start");
+			add(Box.createRigidArea(new Dimension(FRAME_WIDTH, 5)));
 
-		pauseButton = new JButton("Pause");
-		// Using default button position (Center, Right)
-		pauseButton.setMnemonic(KeyEvent.VK_E);
-		pauseButton.setActionCommand("pause");
-		pauseButton.setEnabled(false);
+			// Constructing the JPanel for user interaction
+			JPanel userPanel = new JPanel();
+			userPanel.setSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
+			userPanel.setPreferredSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
+			userPanel.setMaximumSize(new Dimension(FRAME_WIDTH, BUTTONS_HEIGHT));
+			userPanel.setBackground(Color.WHITE);
+			add(BorderLayout.NORTH,userPanel);
+			
 
-		// Adding action Listeners to enable event handling
-		startButton.addActionListener(this);
-		pauseButton.addActionListener(this);
+			// Creating required buttons to help User start the Automata.
+			startButton = new JButton("Start");
+			// place button at center, left position
+			startButton.setVerticalTextPosition(AbstractButton.CENTER);
+			startButton.setHorizontalTextPosition(AbstractButton.LEFT);
+			startButton.setMnemonic(KeyEvent.VK_D);
+			startButton.setActionCommand("start");
 
-		// Adding the buttons to the panel and the panel is added to the layout
-		panel1.add(startButton);
-		panel1.add(pauseButton);
-		add(panel1);
-	}
-
-	// Event handler which responds to User interaction with the UI Window
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		// Starting the Mobile Automata
-		if (e.getActionCommand().equals("start")) {
-			startButton.setEnabled(false);
-			pauseButton.setEnabled(true);
-			// Start the automata thread
-			frameSet.nextFrame();
-		} else if (e.getActionCommand().equals("pause")) {
-			startButton.setEnabled(true);
+			pauseButton = new JButton("Pause");
+			// Using default button position (Center, Right)
+			pauseButton.setMnemonic(KeyEvent.VK_E);
+			pauseButton.setActionCommand("pause");
 			pauseButton.setEnabled(false);
-			// Inform the game thread to stop at next opportunity
-			frameSet.pauseThread();
-		}
 
+			rewindButton = new JButton("Rewind");
+			// Using default button position (Center, Right)
+			rewindButton.setMnemonic(KeyEvent.VK_E);
+			rewindButton.setActionCommand("rewind");
+			rewindButton.setEnabled(false);
+
+			// Adding action Listeners to enable event handling for Start
+			startButton.addActionListener(new ActionListener() {
+
+				
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					
+					startButton.setEnabled(false);
+					pauseButton.setEnabled(true);
+					rewindButton.setEnabled(false);
+
+					// Start the automata thread
+					regionSet.nextRegion();
+				}
+			});
+
+			// Adding action Listeners to enable event handling for Pause
+			pauseButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					pauseButton.setEnabled(false);
+					rewindButton.setEnabled(true);
+					startButton.setEnabled(true);
+					// Inform the thread to pause at next opportunity
+					regionSet.pauseThread();
+
+				}
+			});
+
+			// Adding action Listeners to enable event handling for Rewind
+			rewindButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					log.info("Simulation will now rewind...");
+					rewindButton.setEnabled(false);
+					startButton.setEnabled(false);
+					pauseButton.setEnabled(true);
+					regionSet.rewindRegion();
+
+				}
+			});
+
+			// Adding the buttons to the panel and the panel is added to the layout
+			userPanel.add(startButton);
+			userPanel.add(pauseButton);
+			userPanel.add(rewindButton);
+			add(userPanel);
+
+			log.info("MAutomataDriver holding the UI created successfully... Get ready to witness the simulation !!!");
+		} catch (Exception e) {
+			log.severe("MAutomataDriver holding the UI creation failed. Error Details : " + e.toString());
+		}
 	}
+	
+	
+
+
 
 	// Main routine for getting user inputs and displaying in Swing UI
 	public static void main(String[] args) {
 
-		// for testing getting the inputs through Console (can be generated using UI in
-		// 5b)
+		// Getting these values to start constructing the grid 
 		int rows, cols, ruleNumber, generationLimit, middleCell, initAliveCell, sleepTime;
 
-		MAFrame maFrameGen; // MAFrames for setting up the automata
-		MAFrameSet maFrameGenSet; // MAFrameSet which holds a Map of MAFrames
+		MARegion maRegion; // MARegions for setting up the automata
+		MARegionSet maRegionSet; // MARegionSet which holds a Map of MARegions
 
 		/*
 		 * For testing displaying only forward way of automata, the reverse automata and
@@ -134,14 +177,13 @@ public class MAutomataDriver extends JPanel implements ActionListener {
 																													// UI
 																													// in
 																													// 5b
-			System.out.println("Please enter rows you would like to see in the frame : ");
+			System.out.println("Please enter rows you would like to see in the region : ");
 			rows = scnObj.nextInt();
-			System.out.println("Please enter columns you would like to see in the frame : ");
+			System.out.println("Please enter columns you would like to see in the region : ");
 			cols = scnObj.nextInt();
-			System.out.println("Please enter your rule choice : \nEnter 1 for " + RuleNames.DEADALIVE
-					+ "\nEnter 2 for " + RuleNames.BRIANSBRAIN + "\nEnter 3 for " + RuleNames.TOPDOWNTREE
-					+ "\nEnter 4 for " + RuleNames.GOLDWINNER
-					+ "\nEnter 5 for " + RuleNames.MAZERUNNER);
+			System.out.println("Please enter your rule choice : \nEnter 1 for " + RuleNames.DEADALIVE + "\nEnter 2 for "
+					+ RuleNames.BRIANSBRAIN + "\nEnter 3 for " + RuleNames.TOPDOWNTREE + "\nEnter 4 for "
+					+ RuleNames.GOLDWINNER + "\nEnter 5 for " + RuleNames.MAZERUNNER);
 			ruleNumber = scnObj.nextInt();
 			System.out.println("Please enter Generation Limit Count : ");
 			generationLimit = scnObj.nextInt();
@@ -157,37 +199,37 @@ public class MAutomataDriver extends JPanel implements ActionListener {
 			 * UI or passing it as a value.
 			 */
 			if (ruleNumber == 1) {
-				maFrameGen = new MAFrame(RuleNames.DEADALIVE, rows, cols, initAliveCell);
+				maRegion = new MARegion(RuleNames.DEADALIVE, rows, cols, initAliveCell);
 			} else if (ruleNumber == 2) {
-				maFrameGen = new MAFrame(RuleNames.BRIANSBRAIN, rows, cols, initAliveCell);
+				maRegion = new MARegion(RuleNames.BRIANSBRAIN, rows, cols, initAliveCell);
 			} else if (ruleNumber == 3) {
-				maFrameGen = new MAFrame(RuleNames.TOPDOWNTREE, rows, cols, Math.round(cols / 2));
+				maRegion = new MARegion(RuleNames.TOPDOWNTREE, rows, cols, Math.round(cols / 2));
 			} else if (ruleNumber == 4) {
-				maFrameGen = new MAFrame(RuleNames.GOLDWINNER, rows, cols, cols*rows-Math.round(cols/2));
-			}else {
-				maFrameGen = new MAFrame(RuleNames.MAZERUNNER, rows, cols, 0);
+				maRegion = new MARegion(RuleNames.GOLDWINNER, rows, cols, cols * rows - Math.round(cols / 2));
+			} else {
+				maRegion = new MARegion(RuleNames.MAZERUNNER, rows, cols, 0);
 			}
 
-			// Creating the Initial FrameSet with Initial Frame.
-			maFrameGenSet = new MAFrameSet(maFrameGen, generationLimit, sleepTime);
+			// Creating the Initial RegionSet with Initial Region.
+			maRegionSet = MARegionSet.setRSInstance(maRegion, generationLimit, sleepTime);
 			JFrame UIframe = new JFrame("Mobile Automata");
 
 			// Sample UI just to show a valid 2D Automata
 			UIframe.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 			UIframe.addWindowListener(new WindowAdapter() {
 				public void windowClosing(WindowEvent e) {
-					System.out.println("Window closed. Simulation is stopped...");
+					log.warning("Window closed. Simulation is stopped...");
 					System.exit(0);
 				}
 			});
 
-			// Adding the FrameSet to the view.
-			MAutomataDriver ma = new MAutomataDriver(maFrameGenSet);
+			// Adding the RegionSet to the view.
+			MAutomataDriver ma = new MAutomataDriver(maRegionSet);
 			UIframe.getContentPane().add(ma, BorderLayout.CENTER);
 			UIframe.setVisible(true);
 
 		} catch (Exception e) {
-			System.out.println("An exception occurred while creating UI. Details : " + e.toString());
+			log.severe("An exception occurred while creating UI. Details : " + e.toString());
 			System.exit(0);
 		}
 	}
