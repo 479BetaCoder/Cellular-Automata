@@ -18,7 +18,7 @@ package edu.neu.csye6200.ma;
  */
 
 enum RuleNames {
-	DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, MAZERUNNER, GOLDWINNER; // Currently going with these rules
+	DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, MAZERUNNER, GOLDWINNER; // Currently going with these comboRules
 }
 
 /*

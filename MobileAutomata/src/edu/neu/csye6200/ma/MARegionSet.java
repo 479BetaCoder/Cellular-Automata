@@ -1,5 +1,6 @@
 package edu.neu.csye6200.ma;
 
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Map;
@@ -28,37 +29,30 @@ public class MARegionSet extends JPanel implements Runnable {
 	// custom message to the user.
 	private MARegion currentRegion; // Current region in the RegionSet
 	private boolean paused; // Helps in determining if the generation is paused
+	private boolean stopped;
 	private boolean rewind; // Helps in determining if rewind is called
 	private Thread cellTh; // Thread which executes once the user Starts the Simulation
-	private static MARegionSet regionSetInstance = null; // Singleton Design Pattern as for every simulation we need
-															// only one instance.
+	
 
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 
-	// Singleton Design
-	private MARegionSet(MARegion maRegion, int genLimit, int sleepTime) {
+	
+	public MARegionSet(MARegion maRegion, int genLimit, int sleepTime) {
 
 		// Initializing the properties of a RegionSet
 		initializeRegionSet();
 		this.currentRegion = maRegion;
 		this.genLimit = genLimit;
 		this.sleepTime = sleepTime;
-
+		
 		// Adding the Initial Region to the Map.
 		addRegionToMap(generationCount, currentRegion);
-
 		log.info("MARegion Set created successfully...");
 
 	}
 
-	// Method to create an instance.
-	public static MARegionSet setRSInstance(MARegion maRegion, int genLimit, int sleepTime) {
-		if (regionSetInstance == null) {
-			regionSetInstance = new MARegionSet(maRegion, genLimit, sleepTime);
-		}
-		return regionSetInstance;
-	}
+
 
 	/*
 	 * Routine to initialize all the properties of a Region Set. Must be called
@@ -85,13 +79,13 @@ public class MARegionSet extends JPanel implements Runnable {
 
 	@Override
 	public void run() {
-
+		
 		try {
-			log.info("Simulation started ...");
-			while (!paused && generationCount != genLimit && !completeFlag) {
+			
+			while (!paused && generationCount != genLimit && !completeFlag && !stopped) {
 
 				MARegion nextRegion;
-
+				
 				if (rewind && generationCount > 0) {
 					currentRegion = getMaRegionRecord().get(generationCount - 1);
 					removeRegionFromMap(generationCount);
@@ -108,7 +102,7 @@ public class MARegionSet extends JPanel implements Runnable {
 					currentRegion = nextRegion;
 					repaint(); // Paints the new state of the region using paintComponent.
 				}
-
+				MAutomataDriver.genCount.setText(generationCount + "");
 				simulationCheck();
 				try {
 					Thread.sleep(this.sleepTime);
@@ -116,26 +110,33 @@ public class MARegionSet extends JPanel implements Runnable {
 					log.severe("The thread execution was interrupted. Details : " + e.toString());
 					break;
 				}
-			}
-			if (generationCount < genLimit && paused) {
+			}if(stopped) {
+				stopped = false;
+				}else if (generationCount < genLimit && paused) {
 				if (rewind && generationCount == 0) {
 					rewind = false;
+					 MAutomataDriver.lblStatus.setText("Simulation paused as user went back to the initial state...");
 					log.info("Simulation paused as user went back to the initial state...");
 					MAutomataDriver.pauseButton.setEnabled(false);
 					MAutomataDriver.startButton.setEnabled(true);
 
 				} else if (rewind) {
+					 MAutomataDriver.lblStatus.setText("Simulation paused while user was rewinding...");
 					log.info("Simulation paused while user was rewinding...");
 					MAutomataDriver.startButton.setEnabled(true);
 					MAutomataDriver.rewindButton.setEnabled(true);
 				} else {
+					 MAutomataDriver.lblStatus.setText("Simulation Paused...");
 					log.info("Simulation Paused...");
 				}
 
 			} else if (completeFlag || generationCount == genLimit) {
+				 MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
 				log.info("Simulation completed Successfully...");
+				
 				MAutomataDriver.pauseButton.setEnabled(false);
 				MAutomataDriver.startButton.setEnabled(false);
+				
 			}
 		} catch (Exception e) {
 			log.severe("OOPS!! Some issue occured while simulation was in progress. Details : " + e.toString());
@@ -323,6 +324,7 @@ public class MARegionSet extends JPanel implements Runnable {
 
 						g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
 								squareheight - 1);
+						
 					}
 
 				}
@@ -342,6 +344,11 @@ public class MARegionSet extends JPanel implements Runnable {
 	public void rewindThread() {
 		rewind = true;
 	}
+	
+	// Terminating the simulation. Called by MAutomataDriver
+		public void stopThread() {
+			stopped = true;
+		}
 
 	// Helper methods for calculating the dimensions and helping in filling the
 	// rectangle
@@ -403,14 +410,14 @@ public class MARegionSet extends JPanel implements Runnable {
 	}
 
 	/**
-	 * @return the genLimit
+	 * @return the comboGenLimit
 	 */
 	public int getGenLimit() {
 		return genLimit;
 	}
 
 	/**
-	 * @param genLimit the genLimit to set
+	 * @param comboGenLimit the comboGenLimit to set
 	 */
 	public void setGenLimit(int genLimit) {
 		this.genLimit = genLimit;
@@ -442,6 +449,48 @@ public class MARegionSet extends JPanel implements Runnable {
 	 */
 	public void setCurrentRegion(MARegion currentRegion) {
 		this.currentRegion = currentRegion;
+	}
+
+	/**
+	 * @return the paused
+	 */
+	public boolean isPaused() {
+		return paused;
+	}
+
+	/**
+	 * @param paused the paused to set
+	 */
+	public void setPaused(boolean paused) {
+		this.paused = paused;
+	}
+
+	/**
+	 * @return the stopped
+	 */
+	public boolean isStopped() {
+		return stopped;
+	}
+
+	/**
+	 * @param stopped the stopped to set
+	 */
+	public void setStopped(boolean stopped) {
+		this.stopped = stopped;
+	}
+
+	/**
+	 * @return the rewind
+	 */
+	public boolean isRewind() {
+		return rewind;
+	}
+
+	/**
+	 * @param rewind the rewind to set
+	 */
+	public void setRewind(boolean rewind) {
+		this.rewind = rewind;
 	}
 
 }

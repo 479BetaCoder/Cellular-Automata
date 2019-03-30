@@ -7,6 +7,7 @@ import javax.swing.SwingUtilities;
 import java.awt.BorderLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowListener;
+import java.util.logging.Logger;
 
 /**
  * A Mobile Automata Abstract application class
@@ -16,6 +17,7 @@ import java.awt.event.WindowListener;
 public abstract class MAApp implements ActionListener, WindowListener {
 	protected JFrame frame = null;
 	protected MenuManager menuMgr = null;
+	private static Logger log = Logger.getLogger(MAApp.class.getName());
 
 	/**
 	 * The Biological growth constructor
@@ -53,7 +55,7 @@ public abstract class MAApp implements ActionListener, WindowListener {
 
     
     /**
-     * A convenience method that uses the Swing dispatch threat to show the UI.
+     * A convenience method that uses the Swing dispatch thread to show the UI.
      * This prevents concurrency problems during component initialization.
      */
     public void showUI() {
@@ -72,6 +74,7 @@ public abstract class MAApp implements ActionListener, WindowListener {
      * Shut down the application
      */
     public void exit() {
+    	log.info("Mobile Automata Simulation Closed... Bye !!");
     	frame.dispose();
     	System.exit(0);
     }

@@ -18,12 +18,12 @@ public class MARegion {
 	protected MACell[][] arrCells; // Holds MACells which contain MACellState.
 	private int regionRows; // Dimensions of the Region passed by the user.
 	private int regionColumns; // Dimensions of the Region passed by the user.
-	private int initialAliveCell = 0; // To start the region generation, initially we are making the center cells alive. (This can be modified once UI is done)
+	private int initialAliveCell; // To start the region generation, initially we are making the center cells alive. 
 	private int cellDirection;
 	private boolean zipDir; // for goldWinner direction
 	
 	// For Logging application process to the console.
-		private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
+	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 	
 	public MARegion(RuleNames rule, int regionRows, int regionColumns, int initialAliveCell) {
 		
@@ -103,7 +103,7 @@ public class MARegion {
 
 		/*
 		 * Looping through each cell to determine the neighbors state and deciding the
-		 * cell's state based on the rules.
+		 * cell's state based on the comboRules.
 		 */
 		for (int i = 0; i < getRegionRows(); i++) {
 			for (int j = 0; j < getRegionColumns(); j++) {
@@ -152,14 +152,14 @@ public class MARegion {
 	// Getters and Setters
 
 	/**
-	 * @return the regionRows
+	 * @return the comboRows
 	 */
 	public int getRegionRows() {
 		return regionRows;
 	}
 
 	/**
-	 * @param regionRows the regionRows to set
+	 * @param comboRows the comboRows to set
 	 */
 	public void setRegionRows(int regionWidth) {
 		this.regionRows = regionWidth;

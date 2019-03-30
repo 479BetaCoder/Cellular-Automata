@@ -23,13 +23,13 @@ enum MACellState {
 	ALIVE, DEAD, DYING;
 }
 
-public class MACell implements IMARule{
+public class MACell implements IMARule {
 
 	private MACellState cellState; // Stores the MACellState for an MACell Object.
 	protected MARegion region; // Determines the region to which the cell belongs.
 	private int cellXPos; // Stores the cell's Row position.
 	private int cellYPos; // Stores the cell's Column position.
-	private static int cellCount = 0; // useful in initializing cell states
+	protected static int cellCount = 0; // useful in initializing cell states
 	
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MACell.class.getName());

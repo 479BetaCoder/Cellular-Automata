@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.util.HashMap;
+import java.util.logging.Logger;
+
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBoxMenuItem;
@@ -21,6 +23,8 @@ public class MenuManager implements ActionListener {
 	static int counter=0;
 	private JMenuBar menuBar = null;
 	private MAApp application = null;
+	
+	private static Logger log = Logger.getLogger(MenuManager.class.getName());
 
 	private HashMap<String, AbstractButton> buttonMap = new HashMap<String, AbstractButton>();
 
@@ -418,6 +422,7 @@ public class MenuManager implements ActionListener {
 		}
 
 		public void actionPerformed(ActionEvent e) {
+			log.info("Mobile Automata Simulation Exited ...");
 			application.exit();
 		}
 	}	
