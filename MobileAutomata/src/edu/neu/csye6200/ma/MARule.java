@@ -228,11 +228,6 @@ public class MARule extends MACell {
 				if (this.getCellXPos() + 1 < getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
 					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getRegion().getCellDirection())
 							.getCellState().compareTo(MACellState.DYING) == 0) {
-						if (getRegion().getCellDirection() == 1) {
-							getRegion().setCellDirection(-1);
-						} else {
-							getRegion().setCellDirection(1);
-						}
 						return MACellState.DYING;
 					}
 					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos()).getCellState()

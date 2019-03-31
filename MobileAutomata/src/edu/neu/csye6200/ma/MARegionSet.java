@@ -130,13 +130,20 @@ public class MARegionSet extends JPanel implements Runnable {
 					log.info("Simulation Paused...");
 				}
 
-			} else if (completeFlag || generationCount == genLimit) {
+			} else if (completeFlag) {
+				
 				 MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
 				log.info("Simulation completed Successfully...");
 				
 				MAutomataDriver.pauseButton.setEnabled(false);
 				MAutomataDriver.startButton.setEnabled(false);
 				
+			}else if(generationCount == genLimit) {
+				 	MAutomataDriver.lblStatus.setText("Simulation reached maximum generation Limit...");
+					log.info("Simulation reached maximum generation Limit...");
+					
+					MAutomataDriver.pauseButton.setEnabled(false);
+					MAutomataDriver.startButton.setEnabled(false);
 			}
 		} catch (Exception e) {
 			log.severe("OOPS!! Some issue occured while simulation was in progress. Details : " + e.toString());

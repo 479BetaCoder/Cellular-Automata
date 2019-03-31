@@ -23,7 +23,7 @@ enum MACellState {
 	ALIVE, DEAD, DYING;
 }
 
-public class MACell implements IMARule {
+public abstract class MACell implements IMARule {
 
 	private MACellState cellState; // Stores the MACellState for an MACell Object.
 	protected MARegion region; // Determines the region to which the cell belongs.
@@ -77,10 +77,8 @@ public class MACell implements IMARule {
 	/*
 	 * Implementation is provided by extending classes (Rules)
 	 */
-	 public MACellState getNextCellState() {
-		return getCellState();
-	}
-
+	 public abstract MACellState getNextCellState();
+		
 	/*
 	 * Sets the cell's current state and returns true if the new state is different
 	 * from the current state.
