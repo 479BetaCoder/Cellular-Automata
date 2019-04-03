@@ -3,6 +3,8 @@
  */
 package edu.neu.csye6200.ma;
 
+import java.util.logging.Logger;
+
 /**
  * @author RaviKumar ClassName : MARule Description : MARule determines the cell
  *         state based on the neighboring cell. Rule Name is specified by User.
@@ -18,7 +20,7 @@ package edu.neu.csye6200.ma;
  */
 
 enum RuleNames {
-	DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, MAZERUNNER, GOLDWINNER; // Currently going with these comboRules
+	LOCKME, EDGEAVOIDER, DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, GOLDWINNER; // Currently going with these comboRules
 }
 
 /*
@@ -28,6 +30,10 @@ enum RuleNames {
 public class MARule extends MACell {
 
 	private RuleNames ruleName; // holds the rule Name specified by the user.
+	int[] temp = new int[2]; // for storing next active cell co-ordinates.
+
+	// For Logging application process to the console.
+	private static Logger log = Logger.getLogger(MACell.class.getName());
 
 	public MARule(RuleNames ruleName, MARegion region, MACellState initCellState) {
 		super(region, initCellState);
@@ -41,19 +47,114 @@ public class MARule extends MACell {
 
 		if (ruleName.equals(RuleNames.DEADALIVE)) {
 			return getDeadAliveState();
-
 		} else if (ruleName.equals(RuleNames.BRIANSBRAIN)) {
 			return getBriansBrainState();
-
 		} else if (ruleName.equals(RuleNames.TOPDOWNTREE)) {
 			return getTopDownState();
-		} else if (ruleName.equals(RuleNames.MAZERUNNER)) {
-			return getMazeState();
 		} else if (ruleName.equals(RuleNames.GOLDWINNER)) {
 			return getGoldState();
 		} else {
 			return getCellState();
 		}
+
+	}
+
+	// For active cell next Position
+	public int[] getNextCellPos() {
+
+		if (getRegion().getRuleName().compareTo(RuleNames.LOCKME) == 0) {
+			return getLockMeCood(MACellState.DEAD);
+		} else {
+			return getEAvoidCood();
+		}
+	}
+
+	private int[] getEAvoidCood() {
+
+		int move = 0;
+
+		// either forward or backward
+		if (this.getCellYPos() + 1 < getRegion().getRegionColumns() &&  this.getCellXPos() + 1 != getRegion().getRegionRows()){
+			if(this.getCellXPos() - 2 >=0)
+			{
+				if(getRegion().getCellAt(this.getCellXPos() - 2, this.getCellYPos()).getCellState()
+				.compareTo(MACellState.ALIVE) == 0)  {
+					
+					move = 1;
+					
+				}
+			}
+			move = 1;
+		}else if (this.getCellXPos() + 1 == getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0) {
+			move = 3;
+		}
+
+		// either downward or upward
+		if (this.getCellYPos() + 1 == getRegion().getRegionColumns()
+				&& this.getCellXPos() + 1 < getRegion().getRegionRows()) {
+			move = 2;
+		} else if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() - 1 < 0) {
+			move = 4;
+		}
+		System.out.println("Move is : " + move);
+		switch (move) {
+		
+		case 1: // forward move
+			temp[0] = this.getCellXPos();
+			temp[1] = this.getCellYPos() + 1;
+			break;
+
+		case 2: // downward move
+			temp[0] = this.getCellXPos() + 1;
+			temp[1] = this.getCellYPos();
+			break;
+
+		case 3: // backward move
+			temp[0] = this.getCellXPos();
+			temp[1] = this.getCellYPos() - 1;
+			break;
+
+		case 4: // upward move
+
+			temp[0] = this.getCellXPos() - 1;
+			temp[1] = this.getCellYPos();
+			break;
+
+		}
+
+		return temp;
+	}
+
+	// Helper method to get the required neighbors for active cell movement
+	private int[] getLockMeCood(MACellState state) {
+
+		try {
+
+			for (int i = 1; i >= -1; i--) {
+				for (int j = 1; j >= -1; j--) {
+					if (this.getCellXPos() + i >= 0 && this.getCellXPos() + i < getRegion().getRegionRows()
+							&& this.getCellYPos() + j >= 0 && this.getCellYPos() + j < getRegion().getRegionColumns()) {
+						if (getRegion().getCellAt(this.getCellXPos() + i, this.getCellYPos() + j).getCellState()
+								.compareTo(state) == 0) {
+							if (!(i == 0 && j == 0)) // should not consider the current cell as neighbor
+							{
+								temp[0] = this.getCellXPos() + i;
+								temp[1] = this.getCellYPos() + j;
+								return temp;
+							}
+						}
+					}
+				}
+
+			}
+			// This is done to show that you are locked up !!!
+			temp[0] = -1;
+			temp[1] = -1;
+		} catch (Exception e) {
+			log.severe("Exception occured while getting Neighbor Count : " + e.toString());
+
+		}
+		return temp;
 
 	}
 
@@ -111,88 +212,6 @@ public class MARule extends MACell {
 	}
 
 	/*
-	 * RuleName --> MAZERUNNER RuleDescription --> An ant (Black colored) tries to
-	 * find its home which is diagonally opposite to where it starts. Needs to
-	 * follow a dead path (white colored) in solving the maze. Restrictions : Ant
-	 * always starts from (0,0) and travels only in Forward-Downward direction.
-	 * (i.e., no turning backwards or top-wards)
-	 * 
-	 * Case 1. If there are 2 white cells in ant path, ant prefers forward move.
-	 * Case2. If there are 2 blue cells in ant path, ant prefers downward move killing
-	 * the blue (dying state cell) to reach home faster. 
-	 * Case 3. Irrespective of the cells, if the ant reaches the boundary, it moves in one direction towards the
-	 * home as it is too hungry.
-	 * 
-	 * Outcome : Ant achieves the target of reaching home.
-	 */
-
-	private MACellState getMazeState() {
-		
-		// For Dead cells
-		if (getCellState().compareTo(MACellState.DEAD) == 0) {
-			
-			// Last Column
-			if (this.getCellYPos() == getRegion().getRegionColumns() - 1) {
-				if (this.getCellXPos() - 1 >= 0) {
-					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-							.compareTo(MACellState.ALIVE) == 0)
-						return MACellState.ALIVE;
-				}
-
-			}
-			if (this.getCellYPos() - 1 >= 0) {
-				if (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-						.compareTo(MACellState.ALIVE) == 0)
-					return MACellState.ALIVE;
-			}
-			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
-				if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-						.compareTo(MACellState.ALIVE) == 0) {
-					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
-							.compareTo(MACellState.DYING) == 0)
-						return MACellState.ALIVE;
-				}
-			}
-
-			// For Dying cells
-		} else if (getCellState().compareTo(MACellState.DYING) == 0) {
-
-			// Last Row
-			if (this.getCellXPos() == getRegion().getRegionRows() - 1) {
-				if (this.getCellYPos() - 1 >= 0) {
-					if (getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-							.compareTo(MACellState.ALIVE) == 0)
-						return MACellState.ALIVE;
-				}
-				return getCellState();
-			}
-			// Last Column
-			if (this.getCellYPos() == getRegion().getRegionColumns() - 1) {
-				if (this.getCellXPos() - 1 >= 0) {
-					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-							.compareTo(MACellState.ALIVE) == 0)
-						return MACellState.ALIVE;
-				}
-
-			}
-			if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
-
-				if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos()).getCellState()
-						.compareTo(MACellState.ALIVE) == 0) {
-					if (getRegion().getCellAt(this.getCellXPos() - 1, this.getCellYPos() + 1).getCellState()
-							.compareTo(MACellState.DYING) == 0)
-						return MACellState.ALIVE;
-
-				}
-
-			}
-
-		} else if (getCellState().compareTo(MACellState.ALIVE) == 0)
-			return MACellState.DEAD;
-		return getCellState();
-	}
-
-	/*
 	 * RULENAME: GOLDWINNER DESCRIPTION: An active cell leads to opening a zip of a
 	 * gold bag and getting its owner fortune. Initially the zip is opened from
 	 * bottom to top in a zig-zag pattern using the CellDirection flag Once the
@@ -204,10 +223,12 @@ public class MARule extends MACell {
 	 * 
 	 * Case1. Unzipping - 1a. When there is alive cell - Cells check the row below
 	 * them and direction is determined alternatively by the CellDirection Flag. If
-	 * the cell obtained is dying, we change the direction and return the same
-	 * state. If the cell has a dying cell below, we make it dead (white). 1b.If a
-	 * dying cell has two alive neighbors surrounding it (i.e., y-1 and y+1), the
-	 * cell dies.
+	 * the obtained cell is dying, make the alive cell state as dying. If the cell
+	 * has a dying cell below and a dying cell at y-1, we set the state to dead
+	 * (white).
+	 * 
+	 * 1b.If a dying cell has two alive neighbors surrounding it (i.e., y-1 and
+	 * y+1), the cell dies.
 	 * 
 	 * Case2. Unzipped - (i.e., the active cell reached the top) 2a. A dying cell
 	 * becomes dead. 2b. The alive cell is checked if there is any dead cells in the
@@ -225,15 +246,17 @@ public class MARule extends MACell {
 
 		if (getRegion().isZipDir()) {
 			if (getCellState().compareTo(MACellState.ALIVE) == 0) {
-				if (this.getCellXPos() + 1 < getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0 && this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
-					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getRegion().getCellDirection())
+				if (this.getCellXPos() + 1 < getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0
+						&& this.getCellYPos() + 1 < getRegion().getRegionColumns()) {
+					if (getRegion()
+							.getCellAt(this.getCellXPos() + 1, this.getCellYPos() + getRegion().getCellDirection())
 							.getCellState().compareTo(MACellState.DYING) == 0) {
 						return MACellState.DYING;
 					}
 					if (getRegion().getCellAt(this.getCellXPos() + 1, this.getCellYPos()).getCellState()
 							.compareTo(MACellState.DYING) == 0
 							&& getRegion().getCellAt(this.getCellXPos(), this.getCellYPos() - 1).getCellState()
-									.compareTo(MACellState.DYING) == 0)
+									.compareTo(MACellState.DYING) == 0) // this is to constraint to a narrow region
 						return MACellState.DEAD;
 
 				}

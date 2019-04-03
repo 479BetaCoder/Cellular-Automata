@@ -64,7 +64,7 @@ public class MAutomataDriver extends MAApp {
 		frame.setTitle("Mobile Automata");
 		frame.setResizable(true);
 		menuMgr.createDefaultActions(); // Set up default menu items
-
+		lblStatus.setText("Welcome to Mobile Automata Simulation World ... !!! ");
 		showUI(); // Cause the Swing Dispatch thread to display the JFrame
 
 	}
@@ -123,10 +123,10 @@ public class MAutomataDriver extends MAApp {
 
 		lblRules = new JLabel("Rules");
 		nConfig.add(lblRules);
-		final RuleNames rulesNames[] = { RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN, RuleNames.TOPDOWNTREE,
-				RuleNames.GOLDWINNER, RuleNames.MAZERUNNER };
+		final RuleNames rulesNames[] = { RuleNames.LOCKME, RuleNames.EDGEAVOIDER, RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN, RuleNames.TOPDOWNTREE,
+				RuleNames.GOLDWINNER};
 		comboRules = new JComboBox<RuleNames>(rulesNames);
-		comboRules.setMaximumRowCount(5);
+		comboRules.setMaximumRowCount(6);
 		comboRules.setEditable(false);
 		comboRules.addActionListener(this);
 		nConfig.add(comboRules);
@@ -143,7 +143,7 @@ public class MAutomataDriver extends MAApp {
 
 		lblGenLimit = new JLabel("Generation Limit");
 		nConfig.add(lblGenLimit);
-		final Integer genLimits[] = { 50, 100, 150, 200, 400 };
+		final Integer genLimits[] = { 50, 100, 150, 200, 400, 1000 };
 		comboGenLimit = new JComboBox<Integer>(genLimits);
 		comboGenLimit.setMaximumRowCount(5);
 		comboGenLimit.setEditable(false);
@@ -232,8 +232,6 @@ public class MAutomataDriver extends MAApp {
 				initAliveCell = Math.round(cols / 2);
 			} else if (rule.compareTo(RuleNames.GOLDWINNER) == 0) {
 				initAliveCell = cols * rows - Math.round(cols / 2);
-			} else if (rule.compareTo(RuleNames.MAZERUNNER) == 0) {
-				initAliveCell = 0;
 			}
 
 			MARegion maRegion = new MARegion(rule, rows, cols, initAliveCell);

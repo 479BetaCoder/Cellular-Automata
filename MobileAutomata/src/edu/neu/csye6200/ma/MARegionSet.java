@@ -1,6 +1,5 @@
 package edu.neu.csye6200.ma;
 
-
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Map;
@@ -27,32 +26,28 @@ public class MARegionSet extends JPanel implements Runnable {
 	private int sleepTime; // User defined sleep Time between generations.
 	private boolean completeFlag; // Indicator to alert if the automata is complete. Using which we can show some
 	// custom message to the user.
-	private MARegion currentRegion; // Current region in the RegionSet
+	private MARegion previousRegion; // Previous region in the RegionSet
 	private boolean paused; // Helps in determining if the generation is paused
 	private boolean stopped;
 	private boolean rewind; // Helps in determining if rewind is called
 	private Thread cellTh; // Thread which executes once the user Starts the Simulation
-	
 
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 
-	
 	public MARegionSet(MARegion maRegion, int genLimit, int sleepTime) {
 
 		// Initializing the properties of a RegionSet
 		initializeRegionSet();
-		this.currentRegion = maRegion;
+		this.previousRegion = maRegion;
 		this.genLimit = genLimit;
 		this.sleepTime = sleepTime;
-		
+
 		// Adding the Initial Region to the Map.
-		addRegionToMap(generationCount, currentRegion);
+		addRegionToMap(generationCount, previousRegion);
 		log.info("MARegion Set created successfully...");
 
 	}
-
-
 
 	/*
 	 * Routine to initialize all the properties of a Region Set. Must be called
@@ -79,15 +74,15 @@ public class MARegionSet extends JPanel implements Runnable {
 
 	@Override
 	public void run() {
-		
+
 		try {
-			
+
 			while (!paused && generationCount != genLimit && !completeFlag && !stopped) {
 
 				MARegion nextRegion;
-				
+
 				if (rewind && generationCount > 0) {
-					currentRegion = getMaRegionRecord().get(generationCount - 1);
+					previousRegion = getMaRegionRecord().get(generationCount - 1);
 					removeRegionFromMap(generationCount);
 					generationCount--;
 					repaint(); // Paints the new state of the region using paintComponent.
@@ -96,10 +91,10 @@ public class MARegionSet extends JPanel implements Runnable {
 					paused = true;
 
 				} else {
-					nextRegion = currentRegion.createNextRegion();
+					nextRegion = previousRegion.createNextRegion();
 					generationCount++;
 					addRegionToMap(generationCount, nextRegion); // Once done, the region is added to the MAP
-					currentRegion = nextRegion;
+					previousRegion = nextRegion;
 					repaint(); // Paints the new state of the region using paintComponent.
 				}
 				MAutomataDriver.genCount.setText(generationCount + "");
@@ -110,40 +105,45 @@ public class MARegionSet extends JPanel implements Runnable {
 					log.severe("The thread execution was interrupted. Details : " + e.toString());
 					break;
 				}
-			}if(stopped) {
+			}
+			if (stopped) {
 				stopped = false;
-				}else if (generationCount < genLimit && paused) {
+			} else if (generationCount < genLimit && paused) {
 				if (rewind && generationCount == 0) {
 					rewind = false;
-					 MAutomataDriver.lblStatus.setText("Simulation paused as user went back to the initial state...");
+					MAutomataDriver.lblStatus.setText("Simulation paused as user went back to the initial state...");
 					log.info("Simulation paused as user went back to the initial state...");
 					MAutomataDriver.pauseButton.setEnabled(false);
 					MAutomataDriver.startButton.setEnabled(true);
 
 				} else if (rewind) {
-					 MAutomataDriver.lblStatus.setText("Simulation paused while user was rewinding...");
+					MAutomataDriver.lblStatus.setText("Simulation paused while user was rewinding...");
 					log.info("Simulation paused while user was rewinding...");
 					MAutomataDriver.startButton.setEnabled(true);
 					MAutomataDriver.rewindButton.setEnabled(true);
 				} else {
-					 MAutomataDriver.lblStatus.setText("Simulation Paused...");
+					MAutomataDriver.lblStatus.setText("Simulation Paused...");
 					log.info("Simulation Paused...");
 				}
 
 			} else if (completeFlag) {
-				
-				 MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
+
+				if (previousRegion.isLocked()) {
+					MAutomataDriver.lblStatus.setText("OOPS!! You are locked... Simulation completed Successfully...");
+					log.info("OOPS!! You are locked... Simulation completed Successfully...");
+				}else {
+				MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
 				log.info("Simulation completed Successfully...");
-				
+				}
 				MAutomataDriver.pauseButton.setEnabled(false);
 				MAutomataDriver.startButton.setEnabled(false);
-				
-			}else if(generationCount == genLimit) {
-				 	MAutomataDriver.lblStatus.setText("Simulation reached maximum generation Limit...");
-					log.info("Simulation reached maximum generation Limit...");
-					
-					MAutomataDriver.pauseButton.setEnabled(false);
-					MAutomataDriver.startButton.setEnabled(false);
+
+			} else if (generationCount == genLimit) {
+				MAutomataDriver.lblStatus.setText("Simulation reached maximum generation Limit...");
+				log.info("Simulation reached maximum generation Limit...");
+
+				MAutomataDriver.pauseButton.setEnabled(false);
+				MAutomataDriver.startButton.setEnabled(false);
 			}
 		} catch (Exception e) {
 			log.severe("OOPS!! Some issue occured while simulation was in progress. Details : " + e.toString());
@@ -154,31 +154,31 @@ public class MARegionSet extends JPanel implements Runnable {
 	// check if the simulation is completed even before generation Limit
 	private void simulationCheck() {
 
-		// Checking if the Maze is solved
-		if (currentRegion.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
-			if (currentRegion.getCellAt(currentRegion.getRegionRows() - 1, currentRegion.getRegionColumns() - 1)
-					.getCellState().compareTo(MACellState.ALIVE) == 0)
-				generationCount = genLimit;
-			// Checking if the UNZIPPING is finished
-		} else if (currentRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
-			for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-				if (currentRegion.getCellAt(0, col).getCellState().compareTo(MACellState.DEAD) == 0) {
-					currentRegion.setZipDir(false);
+		// Check for Lockme
+		if (previousRegion.getRuleName().compareTo(RuleNames.LOCKME) == 0) {
+			if (previousRegion.isLocked()) {
+				completeFlag = true;
+			}
+		} // Checking if the UNZIPPING is finished
+		else if (previousRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
+			for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+				if (previousRegion.getCellAt(0, col).getCellState().compareTo(MACellState.DEAD) == 0) {
+					previousRegion.setZipDir(false);
 					break;
 				} else {
-					currentRegion.setZipDir(true);
+					previousRegion.setZipDir(true);
 				}
 			}
 
 			// Checking for GOLDWINNER Simulation is done
 			int testGen = 0; // To stop once we get the gold
-			for (int row = 0; row < currentRegion.getRegionRows(); row++) {
+			for (int row = 0; row < previousRegion.getRegionRows(); row++) {
 
-				if (currentRegion.getCellAt(row, 1).getCellState().compareTo(MACellState.DEAD) == 0) {
+				if (previousRegion.getCellAt(row, 1).getCellState().compareTo(MACellState.DEAD) == 0) {
 					testGen++;
 
 				}
-				if (testGen == currentRegion.getRegionRows() - 1) {
+				if (testGen == previousRegion.getRegionRows() - 1) {
 					completeFlag = true;
 					break;
 				}
@@ -186,17 +186,17 @@ public class MARegionSet extends JPanel implements Runnable {
 			}
 			// Checking if the TOPDOWNTREE simulation is done even before the Generation
 			// Count
-		} else if (currentRegion.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
-			for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-				if (currentRegion.getCellAt(currentRegion.getRegionRows() - 1, col).getCellState()
+		} else if (previousRegion.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+			for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+				if (previousRegion.getCellAt(previousRegion.getRegionRows() - 1, col).getCellState()
 						.compareTo(MACellState.ALIVE) == 0) {
 					completeFlag = true;
 					break;
 				}
 			}
 			// Checking if the DEADALIVE simulation is done even before the Generation Count
-		} else if (currentRegion.getRuleName().compareTo(RuleNames.DEADALIVE) == 0) {
-			if (currentRegion.getCellAt(currentRegion.getRegionRows() - 1, currentRegion.getRegionColumns() - 1)
+		} else if (previousRegion.getRuleName().compareTo(RuleNames.DEADALIVE) == 0) {
+			if (previousRegion.getCellAt(previousRegion.getRegionRows() - 1, previousRegion.getRegionColumns() - 1)
 					.getCellState().compareTo(MACellState.ALIVE) == 0) {
 
 				completeFlag = true;
@@ -206,14 +206,14 @@ public class MARegionSet extends JPanel implements Runnable {
 		} // Checking if BriansBrain is solved
 		else {
 			int bSim = 0;
-			for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-				for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-					if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+			for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+				for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+					if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 						bSim++;
 					}
 				}
 			}
-			if (bSim == currentRegion.getRegionRows() * currentRegion.getRegionColumns()) {
+			if (bSim == previousRegion.getRegionRows() * previousRegion.getRegionColumns()) {
 				completeFlag = true;
 
 			}
@@ -248,12 +248,12 @@ public class MARegionSet extends JPanel implements Runnable {
 			int voffset = getVerticalOffset();
 
 			// MAZE RUNNER GRAPHICS
-			if (currentRegion.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
-				for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-					for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-						if (currentRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+			if (previousRegion.getRuleName().compareTo(RuleNames.LOCKME) == 0) {
+				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+						if (previousRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 							g.setColor(Color.BLACK);
-						} else if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						} else if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 							g.setColor(Color.WHITE);
 						} else {
 							g.setColor(Color.BLUE);
@@ -267,12 +267,12 @@ public class MARegionSet extends JPanel implements Runnable {
 				}
 				// TOPDOWNTREE GRAPHICS (After completion ALIVE Cells are BLACK, DEAD are GOLD
 				// and DYING are BLUE
-			} else if (completeFlag && currentRegion.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
-				for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-					for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-						if (currentRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+			} else if (completeFlag && previousRegion.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+						if (previousRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 							g.setColor(Color.BLACK);
-						} else if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						} else if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 							Color newColor = new Color(255, 215, 0); // For Gold Color
 							g.setColor(newColor);
 						} else {
@@ -284,12 +284,12 @@ public class MARegionSet extends JPanel implements Runnable {
 					}
 
 				} // GOLDWINNER GRAPHICS Initial
-			} else if (currentRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0 && currentRegion.isZipDir()) {
-				for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-					for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-						if (currentRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+			} else if (previousRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0 && previousRegion.isZipDir()) {
+				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+						if (previousRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 							g.setColor(Color.BLACK);
-						} else if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						} else if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 							g.setColor(Color.WHITE);
 						} else {
 							g.setColor(Color.BLUE);
@@ -301,12 +301,13 @@ public class MARegionSet extends JPanel implements Runnable {
 
 				} // GOLDWINNER GRAPHICS when un-zipped opens ( DEAD changes its color from WHITE
 					// to GOLD
-			} else if (currentRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0 && !currentRegion.isZipDir()) {
-				for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-					for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-						if (currentRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+			} else if (previousRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0
+					&& !previousRegion.isZipDir()) {
+				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+						if (previousRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 							g.setColor(Color.BLACK);
-						} else if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						} else if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 							Color newColor = new Color(255, 215, 0);
 							g.setColor(newColor);
 						} else {
@@ -319,11 +320,11 @@ public class MARegionSet extends JPanel implements Runnable {
 
 				}
 			} else {
-				for (int row = 0; row < currentRegion.getRegionRows(); row++) {
-					for (int col = 0; col < currentRegion.getRegionColumns(); col++) {
-						if (currentRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
+				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
+					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
+						if (previousRegion.getCellAt(row, col).getCellState() == MACellState.ALIVE) {
 							g.setColor(Color.GREEN);
-						} else if (currentRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
+						} else if (previousRegion.getCellAt(row, col).getCellState() == MACellState.DEAD) {
 							g.setColor(Color.WHITE);
 						} else {
 							g.setColor(Color.BLUE);
@@ -331,7 +332,7 @@ public class MARegionSet extends JPanel implements Runnable {
 
 						g.fillRect(hoffset + col * squarewidth, voffset + row * squareheight, squarewidth - 1,
 								squareheight - 1);
-						
+
 					}
 
 				}
@@ -351,28 +352,28 @@ public class MARegionSet extends JPanel implements Runnable {
 	public void rewindThread() {
 		rewind = true;
 	}
-	
+
 	// Terminating the simulation. Called by MAutomataDriver
-		public void stopThread() {
-			stopped = true;
-		}
+	public void stopThread() {
+		stopped = true;
+	}
 
 	// Helper methods for calculating the dimensions and helping in filling the
 	// rectangle
 	private int getSquareWidth() {
-		return getSize().width / currentRegion.getRegionColumns();
+		return getSize().width / previousRegion.getRegionColumns();
 	}
 
 	private int getSquareHeight() {
-		return getSize().height / currentRegion.getRegionRows();
+		return getSize().height / previousRegion.getRegionRows();
 	}
 
 	private int getHorizontalOffset() {
-		return (getSize().width - (getSquareWidth() * currentRegion.getRegionColumns())) / 2;
+		return (getSize().width - (getSquareWidth() * previousRegion.getRegionColumns())) / 2;
 	}
 
 	private int getVerticalOffset() {
-		return (getSize().height - (getSquareHeight() * currentRegion.getRegionRows())) / 2;
+		return (getSize().height - (getSquareHeight() * previousRegion.getRegionRows())) / 2;
 	}
 
 	// Helper Method to add Regions to the Map
@@ -385,7 +386,6 @@ public class MARegionSet extends JPanel implements Runnable {
 		maRegionRecord.remove(currentGen);
 	}
 
-	
 	// Getters and Setters Section
 
 	/**
@@ -447,15 +447,15 @@ public class MARegionSet extends JPanel implements Runnable {
 	/**
 	 * @return the current Region
 	 */
-	public MARegion getCurrentRegion() {
-		return currentRegion;
+	public MARegion getPreviousRegion() {
+		return previousRegion;
 	}
 
 	/**
-	 * @param currentRegion the currentRegion to set
+	 * @param previousRegion the previousRegion to set
 	 */
-	public void setCurrentRegion(MARegion currentRegion) {
-		this.currentRegion = currentRegion;
+	public void setPreviousRegion(MARegion currentRegion) {
+		this.previousRegion = currentRegion;
 	}
 
 	/**

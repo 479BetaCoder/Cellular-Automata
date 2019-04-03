@@ -36,7 +36,7 @@ public abstract class MACell implements IMARule {
 	
 
 	public MACell() {
-
+		
 	}
 
 	// initializing cell states from MARule called by MARegion
@@ -49,7 +49,12 @@ public abstract class MACell implements IMARule {
 				this.cellState = MACellState.ALIVE;
 			else
 				this.cellState = cellState;
-		} else if (region.getRuleName().compareTo(RuleNames.MAZERUNNER) == 0) {
+		}else if (region.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
+			if (cellCount == region.getInitialAliveCell())
+				this.cellState = MACellState.DYING;
+			else
+				this.cellState = MACellState.ALIVE;
+		} else if (region.getRuleName().compareTo(RuleNames.LOCKME) == 0) {
 			if (cellCount != 0) {
 				this.cellState = MACellState.values()[new Random().nextInt(3)];
 				if (this.cellState.compareTo(MACellState.ALIVE) == 0) {
@@ -57,14 +62,12 @@ public abstract class MACell implements IMARule {
 				}
 			} else
 				this.cellState = MACellState.ALIVE;
-
-		}else if (region.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
-			if (cellCount == region.getInitialAliveCell())
-				this.cellState = MACellState.DYING;
-			else
+		}else if (region.getRuleName().compareTo(RuleNames.EDGEAVOIDER) == 0) {
+			if (cellCount == 0) {
 				this.cellState = MACellState.ALIVE;
-		}
-		else {
+			} else
+				this.cellState = MACellState.DEAD;
+		}else {
 			if (cellCount == region.getInitialAliveCell() || cellCount == region.getInitialAliveCell() - 1)
 				this.cellState = MACellState.ALIVE;
 			else
@@ -78,6 +81,8 @@ public abstract class MACell implements IMARule {
 	 * Implementation is provided by extending classes (Rules)
 	 */
 	 public abstract MACellState getNextCellState();
+	 
+	 public abstract int[] getNextCellPos();
 		
 	/*
 	 * Sets the cell's current state and returns true if the new state is different
@@ -200,4 +205,5 @@ public abstract class MACell implements IMARule {
 		this.cellYPos = cellYPos;
 	}
 
+	
 }
