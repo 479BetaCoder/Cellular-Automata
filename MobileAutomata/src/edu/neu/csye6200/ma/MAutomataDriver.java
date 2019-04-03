@@ -123,10 +123,10 @@ public class MAutomataDriver extends MAApp {
 
 		lblRules = new JLabel("Rules");
 		nConfig.add(lblRules);
-		final RuleNames rulesNames[] = { RuleNames.LOCKME, RuleNames.EDGEAVOIDER, RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN, RuleNames.TOPDOWNTREE,
+		final RuleNames rulesNames[] = { RuleNames.LOCKME, RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN, RuleNames.TOPDOWNTREE,
 				RuleNames.GOLDWINNER};
 		comboRules = new JComboBox<RuleNames>(rulesNames);
-		comboRules.setMaximumRowCount(6);
+		comboRules.setMaximumRowCount(5);
 		comboRules.setEditable(false);
 		comboRules.addActionListener(this);
 		nConfig.add(comboRules);

@@ -62,11 +62,6 @@ public abstract class MACell implements IMARule {
 				}
 			} else
 				this.cellState = MACellState.ALIVE;
-		}else if (region.getRuleName().compareTo(RuleNames.EDGEAVOIDER) == 0) {
-			if (cellCount == 0) {
-				this.cellState = MACellState.ALIVE;
-			} else
-				this.cellState = MACellState.DEAD;
 		}else {
 			if (cellCount == region.getInitialAliveCell() || cellCount == region.getInitialAliveCell() - 1)
 				this.cellState = MACellState.ALIVE;

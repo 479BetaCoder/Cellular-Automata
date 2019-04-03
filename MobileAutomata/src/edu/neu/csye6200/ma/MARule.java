@@ -20,7 +20,7 @@ import java.util.logging.Logger;
  */
 
 enum RuleNames {
-	LOCKME, EDGEAVOIDER, DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, GOLDWINNER; // Currently going with these comboRules
+	LOCKME, DEADALIVE, BRIANSBRAIN, TOPDOWNTREE, GOLDWINNER; // Currently going with these comboRules
 }
 
 /*
@@ -62,68 +62,10 @@ public class MARule extends MACell {
 	// For active cell next Position
 	public int[] getNextCellPos() {
 
-		if (getRegion().getRuleName().compareTo(RuleNames.LOCKME) == 0) {
-			return getLockMeCood(MACellState.DEAD);
-		} else {
-			return getEAvoidCood();
-		}
+		return getLockMeCood(MACellState.DEAD);
 	}
 
-	private int[] getEAvoidCood() {
-
-		int move = 0;
-
-		// either forward or backward
-		if (this.getCellYPos() + 1 < getRegion().getRegionColumns() &&  this.getCellXPos() + 1 != getRegion().getRegionRows()){
-			if(this.getCellXPos() - 2 >=0)
-			{
-				if(getRegion().getCellAt(this.getCellXPos() - 2, this.getCellYPos()).getCellState()
-				.compareTo(MACellState.ALIVE) == 0)  {
-					
-					move = 1;
-					
-				}
-			}
-			move = 1;
-		}else if (this.getCellXPos() + 1 == getRegion().getRegionRows() && this.getCellYPos() - 1 >= 0) {
-			move = 3;
-		}
-
-		// either downward or upward
-		if (this.getCellYPos() + 1 == getRegion().getRegionColumns()
-				&& this.getCellXPos() + 1 < getRegion().getRegionRows()) {
-			move = 2;
-		} else if (this.getCellXPos() - 1 >= 0 && this.getCellYPos() - 1 < 0) {
-			move = 4;
-		}
-		System.out.println("Move is : " + move);
-		switch (move) {
-		
-		case 1: // forward move
-			temp[0] = this.getCellXPos();
-			temp[1] = this.getCellYPos() + 1;
-			break;
-
-		case 2: // downward move
-			temp[0] = this.getCellXPos() + 1;
-			temp[1] = this.getCellYPos();
-			break;
-
-		case 3: // backward move
-			temp[0] = this.getCellXPos();
-			temp[1] = this.getCellYPos() - 1;
-			break;
-
-		case 4: // upward move
-
-			temp[0] = this.getCellXPos() - 1;
-			temp[1] = this.getCellYPos();
-			break;
-
-		}
-
-		return temp;
-	}
+	
 
 	// Helper method to get the required neighbors for active cell movement
 	private int[] getLockMeCood(MACellState state) {

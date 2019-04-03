@@ -117,7 +117,7 @@ public class MARegion {
 		try {
 
 			// Only for mobile Automata for tracking the activeCell
-			if (newRegion.ruleName.compareTo(RuleNames.LOCKME) == 0 || newRegion.ruleName.compareTo(RuleNames.EDGEAVOIDER) == 0) {
+			if (newRegion.ruleName.compareTo(RuleNames.LOCKME) == 0) {
 
 				int[] newActivePos = nextActivePos();
 
