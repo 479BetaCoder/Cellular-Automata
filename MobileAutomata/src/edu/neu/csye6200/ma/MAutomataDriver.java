@@ -14,8 +14,6 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-
-
 /**
  * @author RaviKumar ClassName : MAutomataDriver Description : Main class for
  *         displaying valid 2D automata in Swing UI. Valuable Output : Generates
@@ -25,6 +23,7 @@ import javax.swing.JPanel;
 
 public class MAutomataDriver extends MAApp {
 
+	// UI elements declaration
 	protected static JButton startButton, pauseButton, rewindButton, stopButton, createButton;
 	protected static JPanel mainPanel, northPanel, nConfig, nPlay, statusPanel;
 	private MARegionSet maRegionSet;
@@ -42,7 +41,7 @@ public class MAutomataDriver extends MAApp {
 	protected static JLabel genCount = null;
 	protected static JLabel lblStatus = null;
 
-	// Display region
+	// Default Display region
 	private static final int FRAME_WIDTH = 1000;
 	private static final int FRAME_HEIGHT = 600;
 	private static final int BUTTONS_HEIGHT = 80;
@@ -52,14 +51,13 @@ public class MAutomataDriver extends MAApp {
 
 	public static void main(String[] args) {
 
-		new MAutomataDriver();
+		new MAutomataDriver(); // Instantiating the UI and bootstrapping the simulation
 		log.info("Mobile Automation started...");
 	}
 
-	// Constructor
+	// Default Constructor
 	public MAutomataDriver() {
-		
-		// Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
 		frame.setSize(FRAME_WIDTH, FRAME_HEIGHT);
 		frame.setTitle("Mobile Automata");
 		frame.setResizable(true);
@@ -67,11 +65,6 @@ public class MAutomataDriver extends MAApp {
 		lblStatus.setText("Welcome to Mobile Automata Simulation World ... !!! ");
 		showUI(); // Cause the Swing Dispatch thread to display the JFrame
 
-	}
-
-	public void windowClosing(WindowEvent e) {
-		log.warning("Window closed. Simulation is stopped...");
-		System.exit(0);
 	}
 
 	/**
@@ -82,12 +75,19 @@ public class MAutomataDriver extends MAApp {
 
 		mainPanel = new JPanel();
 		mainPanel.setLayout(new BorderLayout());
+		/*
+		 * call to initialize and get the north Panel which contains all the user
+		 * interaction items
+		 */
 		mainPanel.add(BorderLayout.NORTH, getnorthPanel());
 		mainPanel.setVisible(true);
 		return mainPanel;
 	}
 
-	// North Panel
+	/*
+	 * North Panel which contains nConfig and nPlay panels which helps in user
+	 * interaction
+	 */
 	public JPanel getnorthPanel() {
 
 		northPanel = new JPanel();
@@ -123,8 +123,8 @@ public class MAutomataDriver extends MAApp {
 
 		lblRules = new JLabel("Rules");
 		nConfig.add(lblRules);
-		final RuleNames rulesNames[] = { RuleNames.LOCKME, RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN, RuleNames.TOPDOWNTREE,
-				RuleNames.GOLDWINNER};
+		final RuleNames rulesNames[] = { RuleNames.LOCKME, RuleNames.DEADALIVE, RuleNames.BRIANSBRAIN,
+				RuleNames.TOPDOWNTREE, RuleNames.GOLDWINNER };
 		comboRules = new JComboBox<RuleNames>(rulesNames);
 		comboRules.setMaximumRowCount(5);
 		comboRules.setEditable(false);
@@ -207,10 +207,10 @@ public class MAutomataDriver extends MAApp {
 	}
 
 	@Override
-	// The related action for the buttons
+	// The related actions for the buttons
 	public void actionPerformed(ActionEvent ae) {
 
-		if ("Create".equals(ae.getActionCommand())) {
+		if ("Create".equals(ae.getActionCommand())) { // Create event handler
 
 			// Initialization
 
@@ -263,7 +263,7 @@ public class MAutomataDriver extends MAApp {
 			frame.setVisible(true);
 			lblStatus.setText("Simulation Region Created successfully...");
 
-		} else if ("Start".equals(ae.getActionCommand())) {
+		} else if ("Start".equals(ae.getActionCommand())) { // Start button event
 
 			lblStatus.setText("Mobile Automata Started ... !!! ");
 			log.info("Starting the mobile simulation ... !!! ");
@@ -278,7 +278,7 @@ public class MAutomataDriver extends MAApp {
 			// Getting the next Region
 			maRegionSet.nextRegion();
 
-		} else if ("Pause".equals(ae.getActionCommand())) {
+		} else if ("Pause".equals(ae.getActionCommand())) { // Pause button event
 
 			// In pause mode you can rewind,start,stop the simulation
 			pauseButton.setEnabled(false);
@@ -303,7 +303,7 @@ public class MAutomataDriver extends MAApp {
 			// Inform the thread to rewind the simulation
 			maRegionSet.rewindRegion();
 
-		} else if ("Stop".equals(ae.getActionCommand())) {
+		} else if ("Stop".equals(ae.getActionCommand())) { // Stop button event
 			lblStatus.setText("Simulation stopped . Thank you for using Mobile Automata ... !!");
 			log.info("Simulation stopped . Thank you for using Mobile Automata ... !!");
 
@@ -325,7 +325,13 @@ public class MAutomataDriver extends MAApp {
 
 	}
 
+	// Default Window events
 
+	@Override
+	public void windowClosing(WindowEvent e) {
+		log.warning("Window closed. Simulation is stopped...");
+		System.exit(0);
+	}
 
 	@Override
 	public void windowOpened(WindowEvent e) {

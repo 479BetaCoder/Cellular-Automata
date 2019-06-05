@@ -16,6 +16,10 @@ import javax.swing.JMenuItem;
 import javax.swing.KeyStroke;
 
 
+/**
+ * @author RaviKumar ClassName : MenuManager 
+ * Description : For displaying default menu options in the JFrame.
+ */
 public class MenuManager implements ActionListener {
 
 	private String id = "";

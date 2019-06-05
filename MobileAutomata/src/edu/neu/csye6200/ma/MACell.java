@@ -7,16 +7,19 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 /**
- * @author RaviKumar ClassName : MACell Description : Contains MACellState in
- *         each MACell and determines Neighbor Cell Count for the desired state.
- *         Valuable Outcome: Gets the Neighbor Count based on the MACellState
- *         the Rule is looking for and forms as a base class for MARule.
+ * @author RaviKumar ClassName : MACell (Abstract) Description : Contains
+ *         MACellState in each MACell and determines Neighbor Cell Count for the
+ *         desired state. Valuable Outcome: Gets the Neighbor Count based on the
+ *         MACellState for which the Rule is looking for and forms as a base
+ *         class for MARule. Also contains abstract methods which are overridden
+ *         by MARule which gives the next Cell State and next Active cell
+ *         position based on the neighbors.
  */
 
 /*
  * ENUM MACellState. Standardized the cell state as other primitive types can
  * lead to poor maintainability as the code grows. Advantage : Can introduce new
- * state when required without much code modification.
+ * state when required without much code modification and high consistency.
  */
 
 enum MACellState {
@@ -29,27 +32,30 @@ public abstract class MACell implements IMARule {
 	protected MARegion region; // Determines the region to which the cell belongs.
 	private int cellXPos; // Stores the cell's Row position.
 	private int cellYPos; // Stores the cell's Column position.
-	protected static int cellCount = 0; // useful in initializing cell states
-	
+	protected static int cellCount = 0; // used in initializing cell states
+
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MACell.class.getName());
-	
 
+	// Default constructor
 	public MACell() {
-		
+
 	}
 
 	// initializing cell states from MARule called by MARegion
 	public MACell(MARegion region, MACellState cellState) {
 
+		// initializing the current region to which the cell belongs
 		this.region = region;
-		
-			if (region.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
+
+		// Based on the RuleNames, the cells are initialized when the region is loaded
+		// for the first time.
+		if (region.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
 			if (cellCount == region.getInitialAliveCell())
 				this.cellState = MACellState.ALIVE;
 			else
 				this.cellState = cellState;
-		}else if (region.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
+		} else if (region.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0) {
 			if (cellCount == region.getInitialAliveCell())
 				this.cellState = MACellState.DYING;
 			else
@@ -62,7 +68,7 @@ public abstract class MACell implements IMARule {
 				}
 			} else
 				this.cellState = MACellState.ALIVE;
-		}else {
+		} else {
 			if (cellCount == region.getInitialAliveCell() || cellCount == region.getInitialAliveCell() - 1)
 				this.cellState = MACellState.ALIVE;
 			else
@@ -73,14 +79,17 @@ public abstract class MACell implements IMARule {
 	}
 
 	/*
-	 * Implementation is provided by extending classes (Rules)
+	 * Implementation is provided by extending class (MARule)
 	 */
-	 public abstract MACellState getNextCellState();
-	 
-	 public abstract int[] getNextCellPos();
-		
+	public abstract MACellState getNextCellState();
+
 	/*
-	 * Sets the cell's current state and returns true if the new state is different
+	 * Implementation is provided by extending class (MARule)
+	 */
+	public abstract int[] getNextCellPos();
+
+	/*
+	 * Sets the cell's current state if the new state is different
 	 * from the current state.
 	 */
 	protected void setState(MACellState state) {
@@ -118,7 +127,12 @@ public abstract class MACell implements IMARule {
 		return desiredNeighbors;
 	}
 
-	// For TOPDOWNTREE
+	
+	/*
+	 * Function to calculate the number of neighbors with a particular state. This is used only by TOPDOWNTREE  
+	 * as the neighbors considered here are only 3 i.e., (x-1,y-1 ; x-1,y; x-1,y+1).
+	 */
+	 
 	protected int getTDNeighborsCount(MACellState state) {
 
 		int desiredNeighbors = 0;
@@ -141,6 +155,7 @@ public abstract class MACell implements IMARule {
 		return desiredNeighbors;
 	}
 
+	
 	
 	// Getters and Setters
 
@@ -200,5 +215,4 @@ public abstract class MACell implements IMARule {
 		this.cellYPos = cellYPos;
 	}
 
-	
 }

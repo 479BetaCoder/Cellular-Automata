@@ -7,16 +7,20 @@ import java.util.logging.Logger;
 
 /**
  * @author RaviKumar ClassName : MARule Description : MARule determines the cell
- *         state based on the neighboring cell. Rule Name is specified by User.
- *         Valuable Outcome : MACellState of the next cell based on its
- *         neighbors and the rule which user wants to see.
+ *         state based on the neighboring cell and also determines the next
+ *         active cell positions for Mobile Automata rule (LOCKME). Rule Name is
+ *         specified by User. Valuable Outcome : MACellState of the next cell
+ *         based on its neighbors and the next active cell position.
  */
 
 /*
  * ENUM RuleNames. Standardized the ruleName as other primitive types or Strings
  * can lead to poor maintainability as the code grows. Advantage : Can introduce
  * new Rule when required without much code modification. Check : User can't
- * mention a rule which does not appear here.
+ * mention a rule which does not appear here. Special Mention : LOCKME returns
+ * the active cell position unlike other rules as LOCKME demonstrates Mobile
+ * Automata where active cell is tracked during the simulation. Other rules are
+ * Generalized Mobile Automata and Cellular Automata demonstrations
  */
 
 enum RuleNames {
@@ -24,8 +28,9 @@ enum RuleNames {
 }
 
 /*
- * IMARule is an interface/contract which forces MARule to specify
- * getNextCellState() so it can override base class method
+ * MACell is an abstract class which is the base class for MARule and forces
+ * MARule to specify the implementation for getNextCellState() and
+ * getNextCellPos().
  */
 public class MARule extends MACell {
 
@@ -36,7 +41,7 @@ public class MARule extends MACell {
 	private static Logger log = Logger.getLogger(MACell.class.getName());
 
 	public MARule(RuleNames ruleName, MARegion region, MACellState initCellState) {
-		super(region, initCellState);
+		super(region, initCellState); // call to MACell
 		this.ruleName = ruleName;
 	}
 
@@ -59,15 +64,33 @@ public class MARule extends MACell {
 
 	}
 
-	// For active cell next Position
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see edu.neu.csye6200.ma.MACell#getNextCellPos()
+	 * 
+	 * This is a helper method to get the next active cell position. Mainly used to
+	 * demonstrate Mobile Automata of LOCKME Rule. Returns : An array of integers
+	 * where the 0th position contains the x-coordinate and 1st position has the
+	 * y-coordinate of the next active cell
+	 */
 	public int[] getNextCellPos() {
 
-		return getLockMeCood(MACellState.DEAD);
+		/*
+		 * RuleName : LOCKME Description : An active cell (black) starts from (0,0)
+		 * position and checks for 8 neighbors and jumps to the position where the cell
+		 * state is dead (white). The neighbors are checked from (x+1,y+1 --> x-1,y-1)
+		 * in that order. So whichever cell is dead in that order will be active in the
+		 * next region.
+		 * 
+		 * Colors : Active (black), Dead (white), Dying(blue)
+		 */
+
+		return getLockMeCood(MACellState.DEAD); // call to get the active cell new coordinates.
 	}
 
-	
-
-	// Helper method to get the required neighbors for active cell movement
+	// Helper method to get the active cell co-ordinates based on the neighbors
+	// state.
 	private int[] getLockMeCood(MACellState state) {
 
 		try {
@@ -80,18 +103,21 @@ public class MARule extends MACell {
 								.compareTo(state) == 0) {
 							if (!(i == 0 && j == 0)) // should not consider the current cell as neighbor
 							{
-								temp[0] = this.getCellXPos() + i;
-								temp[1] = this.getCellYPos() + j;
-								return temp;
+								temp[0] = this.getCellXPos() + i; // x-coordinate
+								temp[1] = this.getCellYPos() + j; // y-coordinate
+								return temp; // returns the first favorable cell position
 							}
 						}
 					}
 				}
 
 			}
-			// This is done to show that you are locked up !!!
-			temp[0] = -1;
-			temp[1] = -1;
+			/*
+			 * When there are no dead (white) cells in your neighbor positions, you are
+			 * locked up. This is done to show that you are locked up !!!
+			 */
+			temp[0] = -1; // x-coordinate
+			temp[1] = -1; // y-coordinate
 		} catch (Exception e) {
 			log.severe("Exception occured while getting Neighbor Count : " + e.toString());
 
@@ -105,8 +131,11 @@ public class MARule extends MACell {
 	 * neighboring cells that are alive, cell should become alive. Pattern : For
 	 * same number of rows and columns (both even), if center cells are initialized
 	 * to alive, entire region becomes alive exactly at a generation Count equal to
-	 * row Count For example: 10*10 region becomes alive when generationCount is 10.
-	 * Outcome: Due to 2 live cells every cell in the grid becomes alive.
+	 * one less than row Count For example: 10*10 region becomes alive when
+	 * generationCount is 9. Outcome: Due to 2 live cells (green) every other cell
+	 * (white) in the grid becomes alive.
+	 * 
+	 * Colors : Alive (green), Dead (white)
 	 */
 	private MACellState getDeadAliveState() {
 		if (getNeighborsCount(MACellState.ALIVE) >= 2)
@@ -121,6 +150,8 @@ public class MARule extends MACell {
 	 * it goes to dying state. Case3 - Any Dying Cell goes to dead state. Outcome:
 	 * Creates chaotic oscillation patterns and sometimes spaceships. After some
 	 * steps, the spaceships fly-off and every cell becomes dead.
+	 * 
+	 * Colors : Alive (green), Dead (white), Dying(blue)
 	 */
 	private MACellState getBriansBrainState() {
 		if (getCellState().equals(MACellState.DEAD) && getNeighborsCount(MACellState.ALIVE) == 2)
@@ -142,6 +173,10 @@ public class MARule extends MACell {
 	 * neighbors, the cell will be dying Case 2. If there is 1 alive neighbor, the
 	 * cell will be alive. Outcome : A tree structure evolves as the active cells
 	 * split as they grow
+	 * 
+	 * Colors: Alive (green), Dead (white), Dying (blue) ; After simulation complete
+	 * --> Alive (black), Dead(gold), Dying(blue)
+	 * 
 	 */
 
 	private MACellState getTopDownState() {
@@ -160,9 +195,6 @@ public class MARule extends MACell {
 	 * active cell reaches the top, it slowly unzips the bag (black in color) and
 	 * displays the gold.
 	 * 
-	 * unzipping - (ALIVE --> BLACK, DEAD --> WHITE, DYING --> BLUE) unzipped -
-	 * (ALIVE --> BLACK, DEAD --> GOLD, DYING --> BLUE)
-	 * 
 	 * Case1. Unzipping - 1a. When there is alive cell - Cells check the row below
 	 * them and direction is determined alternatively by the CellDirection Flag. If
 	 * the obtained cell is dying, make the alive cell state as dying. If the cell
@@ -179,8 +211,13 @@ public class MARule extends MACell {
 	 * 
 	 * In all other cases, the same state is returned.
 	 * 
+	 * Colors : unzipping - (ALIVE --> BLACK, DEAD --> WHITE, DYING --> BLUE)
+	 * unzipped - (ALIVE --> BLACK, DEAD --> GOLD, DYING --> BLUE)
+	 * 
 	 * OUTCOME: A black bag containing gold is unzipped and the user gets a full
 	 * bounty!!!
+	 * 
+	 * 
 	 * 
 	 * 
 	 */

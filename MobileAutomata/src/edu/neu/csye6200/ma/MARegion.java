@@ -18,10 +18,10 @@ public class MARegion {
 	protected MACell[][] arrCells; // Holds MACells which contain MACellState.
 	private int regionRows; // Dimensions of the Region passed by the user.
 	private int regionColumns; // Dimensions of the Region passed by the user.
-	private int initialAliveCell; // To start the region generation, initially we are making the center cells
-									// alive.
-	private int cellDirection;
-	private boolean zipDir; // for goldWinner direction
+	private int initialAliveCell; // To start the region generation, initially we are making some cells active.
+
+	private int cellDirection; // used for GoldWinner Rule
+	private boolean zipDir; // used for GoldWinner Rule
 
 	// used only for LOCKME (active cell tracking only for Mobile Automata)
 	private int activeCellXPos = 0;
@@ -31,6 +31,7 @@ public class MARegion {
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 
+	// Initializing MARegion for simulation
 	public MARegion(RuleNames rule, int regionRows, int regionColumns, int initialAliveCell) {
 
 		this.activeCellXPos = 0;
@@ -47,20 +48,7 @@ public class MARegion {
 
 	}
 
-	/**
-	 * @return the ruleName
-	 */
-	public RuleNames getRuleName() {
-		return ruleName;
-	}
-
-	/**
-	 * @param ruleName the ruleName to set
-	 */
-	public void setRuleName(RuleNames ruleName) {
-		this.ruleName = ruleName;
-	}
-
+	// Default Constructor
 	public MARegion() {
 
 	}
@@ -73,7 +61,8 @@ public class MARegion {
 	private void regionInitialize() {
 		for (int x = 0; x < regionRows; x++) {
 			for (int y = 0; y < regionColumns; y++) {
-				MACell ma = new MARule(this.ruleName, this, MACellState.DEAD);
+				MACell ma = new MARule(this.ruleName, this, MACellState.DEAD); // Based on the rule name the cells are
+																				// initialized
 				ma.setCellXPos(x);
 				ma.setCellYPos(y);
 				ma.setRegion(this);
@@ -98,6 +87,7 @@ public class MARegion {
 			cellDirection = 1;
 		}
 
+		// Used for LockMe as it is a mobile automata which tracks the active cell
 		activeCellXPos = previousRegion.getActiveCellXPos();
 		activeCellYPos = previousRegion.getActiveCellYPos();
 
@@ -107,7 +97,7 @@ public class MARegion {
 
 	/*
 	 * Function which is responsible to create Next Region based on previous Regions
-	 * MACellState
+	 * MACellState and also previous Region's active cell position
 	 */
 	public MARegion createNextRegion() {
 		// Creating a copy of the present region.
@@ -119,18 +109,24 @@ public class MARegion {
 			// Only for mobile Automata for tracking the activeCell
 			if (newRegion.ruleName.compareTo(RuleNames.LOCKME) == 0) {
 
+				// Calling helper method to get the active cell co-ordinates
 				int[] newActivePos = nextActivePos();
 
+				// Checking if the cell is locked or not
 				if (newActivePos[0] == -1 && newActivePos[1] == -1) {
 					for (int i = 0; i < getRegionRows(); i++) {
 						for (int j = 0; j < getRegionColumns(); j++) {
 
-							newRegion.getCellAt(i, j).setState(this.getCellAt(i, j).getCellState());
-							}
+							newRegion.getCellAt(i, j).setState(this.getCellAt(i, j).getCellState()); // if locked
+																										// restore the
+																										// previous
+																										// state
+						}
 					}
-					newRegion.setLocked(true);
+					newRegion.setLocked(true); // if locked, set the locked attribute to make the simulation complete
 				} else {
 
+					// assigning new active cell position
 					newRegion.activeCellXPos = newActivePos[0];
 					newRegion.activeCellYPos = newActivePos[1];
 
@@ -138,23 +134,30 @@ public class MARegion {
 						for (int j = 0; j < getRegionColumns(); j++) {
 
 							if (i == newActivePos[0] && j == newActivePos[1]) {
-								newRegion.getCellAt(i, j).setState(MACellState.ALIVE);
+								newRegion.getCellAt(i, j).setState(MACellState.ALIVE); // only for active cell
 							} else {
-								newRegion.getCellAt(i, j).setState(this.getCellAt(i, j).getCellState());
+								newRegion.getCellAt(i, j).setState(this.getCellAt(i, j).getCellState()); // restoring
+																											// the
+																											// previous
+																											// cell
+																											// states
+																											// for all
+																											// other
+																											// cells
 							}
 
 						}
 					}
 				}
 
-			} else {
+			} else { // For all rules except LOCKME
 				// Calling nextCellStates using previousRegion Object to determine current
 				// state.
 				newCellStates = nextCellStates();
 
 				/*
 				 * Looping through each cell to determine the neighbors state and deciding the
-				 * cell's state based on the comboRules.
+				 * cell's state based on the comboRules (except LOCKME)
 				 */
 				for (int i = 0; i < getRegionRows(); i++) {
 					for (int j = 0; j < getRegionColumns(); j++) {
@@ -184,7 +187,7 @@ public class MARegion {
 	/*
 	 * Next Cell States are calculated looping through each cell in the region, then
 	 * getting the live/dead/dying neighbors and based on the rule, the state is
-	 * decided.
+	 * decided. This is for all the rules except LOCKME.
 	 */
 
 	public MACellState[][] nextCellStates() {
@@ -201,7 +204,11 @@ public class MARegion {
 		return nextStates;
 	}
 
-	// This is to determine the mobile cell state
+	/*
+	 * Helper method to get the next Active Cell Position. As in Mobile Automata
+	 * only 1 cell is active, we will be tracking the active cell position. This
+	 * method is used only when the rule is LOCKME.
+	 */
 	public int[] nextActivePos() {
 		return getCellAt(getActiveCellXPos(), getActiveCellYPos()).getNextCellPos();
 	}
@@ -318,6 +325,20 @@ public class MARegion {
 	 */
 	public void setLocked(boolean isLocked) {
 		this.isLocked = isLocked;
+	}
+
+	/**
+	 * @return the ruleName
+	 */
+	public RuleNames getRuleName() {
+		return ruleName;
+	}
+
+	/**
+	 * @param ruleName the ruleName to set
+	 */
+	public void setRuleName(RuleNames ruleName) {
+		this.ruleName = ruleName;
 	}
 
 }

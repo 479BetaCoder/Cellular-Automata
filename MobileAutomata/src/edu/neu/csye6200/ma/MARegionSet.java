@@ -13,7 +13,7 @@ import javax.swing.JPanel;
  *         Map which are generated using rule provided by the user. Also helps
  *         in setting up Regions in the UI. Valuable Output : maRegionRecord
  *         which contains all the Regions generated to produce a valid 2D Mobile
- *         Automata.
+ *         Automata. Also this acts as a JPanel where the simulation is done.
  */
 
 public class MARegionSet extends JPanel implements Runnable {
@@ -21,20 +21,30 @@ public class MARegionSet extends JPanel implements Runnable {
 	private static final long serialVersionUID = 1L;
 	private Map<Integer, MARegion> maRegionRecord; // To store all the Regions. Will be helpful in retrieving data back
 	private int generationCount; // To keep track of region generations.
-	private int genLimit; // User defined limit until which the Regions are generated and stored in the
-	// MAP.
+
+	/*
+	 * User defined limit until which the Regions are generated and stored in the
+	 * MAP and simulation stops when the limit is reached
+	 */
+	private int genLimit;
+
 	private int sleepTime; // User defined sleep Time between generations.
-	private boolean completeFlag; // Indicator to alert if the automata is complete. Using which we can show some
-	// custom message to the user.
 	private MARegion previousRegion; // Previous region in the RegionSet
-	private boolean paused; // Helps in determining if the generation is paused
-	private boolean stopped;
-	private boolean rewind; // Helps in determining if rewind is called
 	private Thread cellTh; // Thread which executes once the user Starts the Simulation
+
+	/*
+	 * Indicator to alert if the automata is complete. Using which we can show some
+	 * custom message to the user.
+	 */
+	private volatile boolean completeFlag;
+	private volatile boolean paused; // Helps in determining if the generation is paused
+	private volatile boolean stopped;// Helps in stopping the simulation.
+	private volatile boolean rewind; // Helps in determining if rewind is called
 
 	// For Logging application process to the console.
 	private static Logger log = Logger.getLogger(MAutomataDriver.class.getName());
 
+	// Constructor to initialize the MARegionSet
 	public MARegionSet(MARegion maRegion, int genLimit, int sleepTime) {
 
 		// Initializing the properties of a RegionSet
@@ -77,35 +87,40 @@ public class MARegionSet extends JPanel implements Runnable {
 
 		try {
 
+			// Multiple checks are made before new region is created.
 			while (!paused && generationCount != genLimit && !completeFlag && !stopped) {
 
 				MARegion nextRegion;
 
+				// To check if user is rewinding the simulation
 				if (rewind && generationCount > 0) {
 					previousRegion = getMaRegionRecord().get(generationCount - 1);
 					removeRegionFromMap(generationCount);
 					generationCount--;
 					repaint(); // Paints the new state of the region using paintComponent.
 
-				} else if (rewind && generationCount == 0) {
+				} else if (rewind && generationCount == 0) { // To pause the simulation when user goes to initial state.
 					paused = true;
 
-				} else {
+				} else { // Forward simulation
 					nextRegion = previousRegion.createNextRegion();
 					generationCount++;
 					addRegionToMap(generationCount, nextRegion); // Once done, the region is added to the MAP
 					previousRegion = nextRegion;
 					repaint(); // Paints the new state of the region using paintComponent.
 				}
+
 				MAutomataDriver.genCount.setText(generationCount + "");
-				simulationCheck();
+				simulationCheck(); // helper method to check if the simulation is completed
+
 				try {
-					Thread.sleep(this.sleepTime);
+					Thread.sleep(this.sleepTime); // customized sleep time
 				} catch (InterruptedException e) {
 					log.severe("The thread execution was interrupted. Details : " + e.toString());
 					break;
 				}
-			}
+			} // Custom messages for the user both in console and UI to help user for
+				// identifying simulation state.
 			if (stopped) {
 				stopped = false;
 			} else if (generationCount < genLimit && paused) {
@@ -131,9 +146,9 @@ public class MARegionSet extends JPanel implements Runnable {
 				if (previousRegion.isLocked()) {
 					MAutomataDriver.lblStatus.setText("OOPS!! You are locked... Simulation completed Successfully...");
 					log.info("OOPS!! You are locked... Simulation completed Successfully...");
-				}else {
-				MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
-				log.info("Simulation completed Successfully...");
+				} else {
+					MAutomataDriver.lblStatus.setText("Simulation completed Successfully...");
+					log.info("Simulation completed Successfully...");
 				}
 				MAutomataDriver.pauseButton.setEnabled(false);
 				MAutomataDriver.startButton.setEnabled(false);
@@ -151,7 +166,8 @@ public class MARegionSet extends JPanel implements Runnable {
 
 	}
 
-	// check if the simulation is completed even before generation Limit
+	// Helper method to check if the simulation is completed even before generation
+	// Limit.
 	private void simulationCheck() {
 
 		// Check for Lockme
@@ -221,7 +237,7 @@ public class MARegionSet extends JPanel implements Runnable {
 
 	}
 
-	// Start point for generation next Regions. Called by MAutomataDriver.
+	// Start point for generating next Regions. Called by MAutomataDriver.
 	public void nextRegion() {
 		cellTh = new Thread(this, "automataThread"); // Starts a new Thread
 		this.paused = false;
@@ -229,7 +245,7 @@ public class MARegionSet extends JPanel implements Runnable {
 		cellTh.start(); // Calls run method of the thread
 	}
 
-	// Start point for generation next Regions. Called by MAutomataDriver.
+	// Start point for retrieving previous Regions. Called by MAutomataDriver.
 	public void rewindRegion() {
 		cellTh = new Thread(this, "automataThread"); // Starts a new Thread
 		this.paused = false;
@@ -241,9 +257,11 @@ public class MARegionSet extends JPanel implements Runnable {
 	public void paintComponent(Graphics g) {
 
 		try {
+			// helper methods to calculate the rectangle size in the panel.
 			int squarewidth = getSquareWidth();
 			int squareheight = getSquareHeight();
 
+			// helper methods to get the co-ordinates of the cell to fill them.
 			int hoffset = getHorizontalOffset();
 			int voffset = getVerticalOffset();
 
@@ -265,8 +283,10 @@ public class MARegionSet extends JPanel implements Runnable {
 					}
 
 				}
-				// TOPDOWNTREE GRAPHICS (After completion ALIVE Cells are BLACK, DEAD are GOLD
-				// and DYING are BLUE
+				/*
+				 * TOPDOWNTREE GRAPHICS (After completion ALIVE Cells are BLACK, DEAD are GOLD
+				 * and DYING are BLUE
+				 */
 			} else if (completeFlag && previousRegion.getRuleName().compareTo(RuleNames.TOPDOWNTREE) == 0) {
 				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
 					for (int col = 0; col < previousRegion.getRegionColumns(); col++) {
@@ -299,8 +319,10 @@ public class MARegionSet extends JPanel implements Runnable {
 								squareheight - 1);
 					}
 
-				} // GOLDWINNER GRAPHICS when un-zipped opens ( DEAD changes its color from WHITE
-					// to GOLD
+				} /*
+					 * GOLDWINNER GRAPHICS when un-zipped opens ( DEAD changes its color from WHITE
+					 * to GOLD
+					 */
 			} else if (previousRegion.getRuleName().compareTo(RuleNames.GOLDWINNER) == 0
 					&& !previousRegion.isZipDir()) {
 				for (int row = 0; row < previousRegion.getRegionRows(); row++) {
